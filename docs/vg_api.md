@@ -2,6 +2,13 @@
 
 Short-lived, password-based auth for Collect-style app users tied to projects. Tokens are bearer-only (no cookies) and expire based on `vg_app_user_session_ttl_days` (default 3 days) stored in `vg_settings`.
 
+## Frontend quick reference
+- No long-lived tokens are ever returned from create/list endpoints; only `/login` returns a short-lived bearer token.
+- Listings always include `token: null`; use `/login` to obtain a token for data submission.
+- Session cap and TTL are enforced server-side; a new login trims older sessions beyond the cap.
+- All app-user requests must include `Authorization: Bearer <short-token>` (never cookies).
+- Common error codes: `400` validation, `401` auth failure/expired token, `403` lack of project role or closed form, `404` not found/out-of-project.
+
 ## Password policy
 - Minimum 10 characters
 - At least one uppercase, one lowercase, one digit, one special (`~!@#$%^&*()_+-=,.`)
@@ -19,7 +26,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   ```
 - Response — HTTP 200, application/json (app-user record; no long-lived token is minted):
   ```json
-  { "id": 12, "createdAt": "2025-12-16T16:00:00.000Z", "updatedAt": null, "displayName": "Collect User", "token": null, "projectId": 1 }
+  { "id": 12, "createdAt": "2025-12-16T16:00:00.000Z", "updatedAt": null, "displayName": "Collect User", "token": null, "projectId": 1, "active": true }
   ```
 
 ### Login for short-lived token
@@ -37,6 +44,25 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   `projectId` comes from the linked `field_keys` row (app users are always project-scoped). Expiry is set from `vg_app_user_session_ttl_days`. Cookies ignored.
 - Failure: HTTP 401.2 `authenticationFailed` (generic message).
 - Lockout: 5 failed attempts in 5 minutes per `username+IP` → 10-minute lock. Attempts are logged in `vg_app_user_login_attempts` with success/failure.
+
+### List app users
+**GET /projects/:projectId/app-users**
+
+- Auth: Admin/manager on the project.
+- Response — HTTP 200, application/json:
+  ```json
+  [
+    {
+      "id": 12,
+      "projectId": 1,
+      "displayName": "Collect User",
+      "createdAt": "2025-12-16T16:00:00.000Z",
+      "updatedAt": null,
+      "token": null
+    }
+  ]
+  ```
+  `token` is always `null` in listings; use `/login` for a short-lived token. Extended metadata (`X-Extended-Metadata: true`) also returns `createdBy` and `lastUsed`.
 
 ### Change password (self)
 **POST /projects/:projectId/app-users/:id/password/change**
@@ -103,6 +129,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 - Project linkage is enforced: the login response carries the app user's `projectId`, and existing sessions are only usable while the related `field_key` stays active for that project.
 - All auth checks use bearer headers; cookies are ignored on these routes to minimize CSRF surface.
 - Audit events for creation, password operations, revocation, activation, and login success/failure should be emitted with vg-prefixed action identifiers.
+- Listings never expose active short tokens; frontends must explicitly call `/login` to obtain one for submissions.
 
 ## Configuration
 - Session TTL is driven by the DB setting `vg_app_user_session_ttl_days` stored in `vg_settings`; default seed is `3` days (see migration `plan/sql/vg_app_user_auth.sql`). If the setting is absent, the backend falls back to 3 days.
