@@ -4,26 +4,20 @@ Key scenarios covered for the vg app-user auth / short-lived token work.
 
 | Scenario | Coverage | Status | Notes | Command |
 | --- | --- | --- | --- | --- |
-| Create app user does not mint long-lived session; login issues short token with projectId; session TTL ≈ 3 days | `test/integration/api/vg-app-user-auth.js` (first test) | ✅ Pass | Validates no session on create, login returns token+projectId, session expiry ~72h | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js` |
-| Lockout after 5 failed attempts per username+IP with 10-min block | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Confirms 6th attempt rejected after 5 failures | same as above |
-| Lockout lifts after window expires | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Aging attempts beyond lock window allows login | same as above |
-| Max 3 active sessions per app user | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Fourth login prunes oldest token; capped at 3 | same as above |
-| Password change invalidates prior sessions and allows new login with new password | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Old token rejected; new token issued | same as above |
-| Admin reset + deactivate blocks login and revokes sessions; reactivate check | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Ensures reset forces re-login; deactivate blocks auth; revoke-admin fails on old token | same as above |
-| Username normalization on create; mixed-case login succeeds | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Stores normalized username; login accepts mixed case/whitespace | same as above |
-| Duplicate username rejected (unique constraint) | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Second create returns 409 | same as above |
-| Invalid passwords and blank usernames rejected on create | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Password policy enforced; whitespace-only username rejected | same as above |
-| App user cannot change/reset/deactivate another app user | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | RBAC enforcement: token-bound actor cannot operate on other app users | same as above |
-| App user cannot change admin/user password via `/users/:id/password` | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | App-user token gets 403 on user password route | same as above |
-| Expired tokens are rejected | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Manual expiry in DB causes authenticated action to fail | same as above |
-| Deactivated app user cannot log in or reuse prior token | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Admin deactivation blocks login and invalidates existing token | same as above |
-| Password policy enforcement (length/upper/lower/digit/special) | `test/unit/util/vg-password.js` | ✅ Pass | Unit-level policy checks | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js` |
-| Password policy: rejects too short | `test/unit/util/vg-password.js` | ✅ Pass | Rejects passwords shorter than policy | same as above |
-| Password policy: requires special char | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing special characters | same as above |
-| Password policy: requires uppercase | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing uppercase letter | same as above |
-| Password policy: requires lowercase | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing lowercase letter | same as above |
-| Password policy: requires digit | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing digit | same as above |
+| Create app user with no long-lived session; login issues short token + projectId; session TTL ≈ 3 days | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Verifies creation has no session, login returns token with ~72h expiry | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js` |
+| Lockout policy and recovery | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | 5 failed attempts → lock for ~10 minutes; lock lifts after window | same as above |
+| Session caps (default 3, DB override 2) | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Fourth login prunes oldest; DB setting `vg_app_user_session_cap`=2 enforced | same as above |
+| Audit logging across lifecycle | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Emits vg.app_user.* for create, login success/failure, password change/reset, revoke, deactivate | same as above |
+| Password change/reset/deactivate behaviors | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Password change drops old sessions; admin reset + deactivate block login; deactivated token rejected | same as above |
+| Username rules and RBAC guards | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Normalizes usernames, rejects duplicates/blank/invalid, enforces self-only ops and blocks user password routes | same as above |
+| Expired token rejection | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Manually expired session cannot be used | same as above |
+| Unit: password policy accept | `test/unit/util/vg-password.js` | ✅ Pass | Valid password returns true | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js` |
+| Unit: too short | `test/unit/util/vg-password.js` | ✅ Pass | Rejects short password | same as above |
+| Unit: missing special char | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing special | same |
+| Unit: missing uppercase | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing uppercase | same |
+| Unit: missing lowercase | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing lowercase | same |
+| Unit: missing digit | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing digit | same |
 
-Not yet run in this session:
-- ☐ Broader regression suites (full integration/unit matrix)
-- ☐ Manual/automated TTL expiry verification beyond ~72h approximation
+Run in this session:
+- ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js`
+- ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js`

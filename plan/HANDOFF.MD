@@ -1,84 +1,27 @@
-I couldn’t complete the last edits due to filesystem
-  permission/tooling issues, but here’s a concise
-  handoff so you can resume.
+## Current state (vg app-user auth)
 
-  ## Current state
+- Repo: /Users/vivekgupta/workspace/ODK/central (workspace-write). Network restricted.
+- Feature: vg app-user short tokens, session cap, audits implemented.
+- DB config: `vg_settings` seeds include `vg_app_user_session_ttl_days=3`, `vg_app_user_session_cap=3`.
+- Audits: vg.app_user.create/login.success/login.failure/password.change/password.reset/sessions.revoke/activate/deactivate all logged via Audits.log.
+- Tests now green:
+  - `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js`
+  - `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js`
 
-  - Repo: /Users/vivekgupta/workspace/ODK/central with
-    submodule server on master at commit 70ea57e9 (vg
-    changes pushed).
-  - Stack: Docker compose up with --profile central;
-    Postgres, Redis, etc. are running. Service is bind-
-    mounted to ./server and nodemon is active.
-  - Test DB: odk_integration_test exists with vg tables
-    (applied via server/plan/sql/vg_app_user_auth.sql).
-    Test user odk_test_user and DB were created earlier.
+## Recent edits
 
-  ## Tests
+- Domain: added audit logging and session-cap enforcement; stricter username validation.
+- Query: vg-app-user-auth joins actors to carry acteeId; Sessions.trimByActorId added.
+- Docs/plan: updated API doc and plan files with session cap + audits; vg_tests.md table refreshed.
 
-  - Unit vg-password passed:
+## Commands
 
-    docker compose -f docker-compose.yml -f docker-
-  compose.override.yml -f docker-compose.dev.yml
-  --profile central exec service sh -lc 'cd /usr/odk &&
-  NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/
-  unit/util/vg-password.js'
-  - Integration vg-app-user-auth currently failing
-    2 assertions:
-      - should create app users without long-lived
-        sessions... -> login.token undefined; .should
-        on undefined.
-      - should allow password change... ->
-        loginAfter.token.should.be.a.token is not
-        a function (token missing or not using
-        assertions).
+- Run integration suite:
+  `docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.dev.yml --profile central exec service sh -lc 'cd /usr/odk  && NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js'`
+- Run unit password policy:
+  `docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.dev.yml --profile central exec service sh -lc 'cd /usr/odk &&  NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js'`
 
-  ## Likely fixes
+## Notes
 
-  - Import custom assertions in test/integration/api/vg-
-    app-user-auth.js so token assertion exists:
-
-    const should = require('should');
-    require('../assertions'); // add this
-  - Ensure login response returns { token, projectId }
-    as expected; if route returns { token } only, adjust
-    the test to check for presence instead of .should
-    on undefined.
-  - For the second failure, ensure loginAfter.token
-    exists before calling .should.be.a.token(). If the
-    API returns no token, adjust expectations.
-
-  ## Useful commands
-
-  - Run integration test:
-
-    docker compose -f docker-compose.yml -f docker-
-  compose.override.yml -f docker-compose.dev.yml
-  --profile central exec service sh -lc 'cd /usr/odk
-  && NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha
-  --recursive test/integration/api/vg-app-user-auth.js'
-  - Service logs:
-
-    docker compose -f docker-compose.yml -f docker-
-  compose.override.yml -f docker-compose.dev.yml
-  --profile central logs -f service
-
-  ## Files to edit
-
-  - server/lib/model/query/vg-app-user-auth.js (already
-    fixed import; currently const { Frame, readable,
-    table, embedded } = require('../frame'); at top).
-  - server/test/integration/api/vg-app-user-auth.js (add
-    assertions require, adjust expectations).
-
-  ## Caution
-
-  - Filesystem edits from host were blocked earlier
-    (Operation not permitted); if that persists, edit
-    via docker compose ... exec service sh inside
-    container or adjust macOS permissions.
-
-  This should get you to green tests. If permissions
-  block host edits, open a shell in the service
-  container and edit /usr/odk/test/integration/api/vg-
-  app-user-auth.js directly.
+- Session cap is configurable via DB: `INSERT INTO vg_settings (vg_key_name, vg_key_value) VALUES ('vg_app_user_session_cap','2') ON CONFLICT (vg_key_name) DO UPDATE SET vg_key_value='2';`
+- Tokens stored in `sessions`; logins trim older sessions beyond cap.
