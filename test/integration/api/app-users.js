@@ -291,4 +291,3 @@ describe('api: /key/:key', () => {
       .expect(403);
   })));
 });
-
