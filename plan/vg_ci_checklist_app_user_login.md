@@ -6,19 +6,18 @@ Purpose: track implementation steps for the vg_* app-user login, password policy
 - [x] Apply SQL migration at plan/sql/vg_app_user_auth.sql (creates vg_field_key_auth, vg_settings seeded with vg_app_user_session_ttl_days=3, vg_app_user_login_attempts).
 
 ## Model/query layer
-- [ ] Extend FieldKey frame with vg_* fields.
-- [ ] Add vg-specific field key queries (create with password, set password, set active, get by vg_username).
-- [ ] Add vg_app_user_auth query helpers for lockout checks and recording attempts.
-- [ ] Ensure Sessions.create/bearer lookup respects vg_active and uses config TTL.
+- [ ] Add vg_field_key_auth frame/query (actorId FK/PK) and helpers (create with password, set password, set active, get by vg_username).
+- [ ] Add vg_app_user_auth query helpers for lockout checks and recording attempts using vg_app_user_login_attempts.
+- [ ] Ensure Sessions.create/bearer lookup rejects vg_active=false and uses TTL from vg_settings (vg_app_user_session_ttl_days=3 default).
 
 ## Domain/helpers
 - [ ] Implement vg_app_user_password policy helper (10 chars, upper/lower/digit/special).
-- [ ] Implement vg_app_user_auth orchestration (login, change/reset password, revoke, deactivate).
+- [ ] Implement vg_app_user_auth orchestration (login, change/reset password, revoke, deactivate) using vg_field_key_auth and vg_settings TTL.
 - [ ] Define vg_* audit action identifiers and emit events.
 
 ## HTTP/resources
 - [ ] Wire new vg app-user auth routes (login, change, reset, self revoke, admin revoke, deactivate/reactivate).
-- [ ] Adjust app-user create/update to require vg_username/password and map payload to vg_* columns.
+- [ ] Adjust app-user create/update to require vg_username/password and populate vg_field_key_auth alongside field_keys.
 - [ ] Ensure login routes ignore cookies; use bearer/header-only to avoid CSRF; CSRF tokens if cookies ever used for admin UI.
 
 ## Rate limiting and lockout
