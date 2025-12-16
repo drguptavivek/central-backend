@@ -29,7 +29,7 @@
     },
     "enketo": {
       "url": "http://enketo:8005/-",
-      "apiKey": "0btl4i3mYbo8vPEehCG03NFnAV0ATpSDMiPdh3tLFBg2yPuy5vZmabXB3F5blcHpn1GZhdzKMgPD9tH0wrp1RtdxtBcsuwP0pLbq3dXUDuW7EX4kAPzaUVPvawoE03Zw"
+      "apiKey": ""
     },
     "env": {
       "domain": "https://central-dev",

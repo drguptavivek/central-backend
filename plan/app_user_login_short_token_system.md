@@ -10,6 +10,7 @@
       - vg_active boolean default true.
     Index: unique on vg_username; optional index on vg_active.
   - New table vg_settings (id serial, vg_key_name text, vg_key_value text) to store vg_app_user_session_ttl_days (days or seconds) and future vg_* configs; seed row ('vg_app_user_session_ttl_days','3').
+    - Also seed vg_app_user_session_cap default 3 to cap active app-user sessions.
   - New table vg_app_user_login_attempts for tracking login failures/successes; rows retained indefinitely.
   - Migration: create new tables; no changes to field_keys columns; provided as separate SQL at plan/sql/vg_app_user_auth.sql to apply via psql.
 

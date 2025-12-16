@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS vg_settings (
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_app_user_session_ttl_days', '3')
   ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_app_user_session_cap', '3')
+  ON CONFLICT (vg_key_name) DO NOTHING;
 
 -- Login attempt log for rate limiting/lockout.
 CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (

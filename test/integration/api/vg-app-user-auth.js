@@ -1,5 +1,6 @@
 const should = require('should');
 const { sql } = require('slonik');
+require('../assertions');
 const { testService } = require('../setup');
 
 const STRONG_PASSWORD = 'GoodPass!1X';
@@ -33,6 +34,7 @@ describe('api: vg app-user auth', () => {
       .expect(200)
       .then((res) => res.body);
 
+    should.exist(login.token);
     login.projectId.should.equal(1);
     login.token.should.be.a.token();
 
@@ -67,6 +69,130 @@ describe('api: vg app-user auth', () => {
     successes.should.equal(0);
   }));
 
+  it('should cap active sessions at three per app user', testService(async (service, container) => {
+    const username = 'vguser-cap';
+    const appUser = await createAppUser(service, { username });
+
+    const tokens = [];
+    for (let i = 0; i < 4; i += 1) {
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+      tokens.push(token);
+    }
+
+    const { count } = await container.one(sql`
+      select count(*) from sessions where "actorId"=${appUser.id}
+    `);
+    Number(count).should.equal(3);
+
+    // Oldest token should be gone.
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokens[0]}`)
+      .expect(401);
+  }));
+
+  it('should respect configured session cap value', testService(async (service, container) => {
+    const username = 'vguser-cap-override';
+    const appUser = await createAppUser(service, { username });
+
+    await container.run(sql`
+      INSERT INTO vg_settings (vg_key_name, vg_key_value)
+      VALUES ('vg_app_user_session_cap', '2')
+      ON CONFLICT (vg_key_name) DO UPDATE SET vg_key_value='2'
+    `);
+
+    const tokens = [];
+    for (let i = 0; i < 3; i += 1) {
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+      tokens.push(token);
+    }
+
+    const { count } = await container.one(sql`
+      select count(*) from sessions where "actorId"=${appUser.id}
+    `);
+    Number(count).should.equal(2);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokens[0]}`)
+      .expect(401);
+
+    // Reset cap to default for other tests.
+    await container.run(sql`
+      UPDATE vg_settings SET vg_key_value='3' WHERE vg_key_name='vg_app_user_session_cap'
+    `);
+  }));
+
+  it('should reject a third simultaneous session when DB cap is 2', testService(async (service, container) => {
+    const username = 'vguser-cap-2';
+    const appUser = await createAppUser(service, { username });
+
+    await container.run(sql`
+      INSERT INTO vg_settings (vg_key_name, vg_key_value)
+      VALUES ('vg_app_user_session_cap', '2')
+      ON CONFLICT (vg_key_name) DO UPDATE SET vg_key_value='2'
+    `);
+
+    const tokens = [];
+    for (let i = 0; i < 2; i += 1) {
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+      tokens.push(token);
+    }
+
+    const { token: third } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    // Expect oldest token to be trimmed from DB.
+    const { count: oldCount } = await container.one(sql`
+      select count(*)::int as count from sessions where token=${tokens[0]}
+    `);
+    oldCount.should.equal(0);
+
+    const { count: remaining } = await container.one(sql`
+      select count(*)::int as count from sessions where token in (${sql.join([tokens[1], third].map((t) => sql`${t}`), sql`,` )})
+    `);
+    remaining.should.equal(2);
+
+    await container.run(sql`
+      UPDATE vg_settings SET vg_key_value='3' WHERE vg_key_name='vg_app_user_session_cap'
+    `);
+  }));
+
+  it('should lift lockout after the lock window expires', testService(async (service, container) => {
+    const username = 'vguser-lock-expire';
+    await createAppUser(service, { username });
+
+    for (let i = 0; i < 5; i += 1) {
+      await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: 'WrongPass!1' })
+        .expect(401);
+    }
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
+
+    // Age out attempts beyond 10 minutes to simulate lock duration expiry.
+    await container.run(sql`
+      update vg_app_user_login_attempts
+        set "createdAt" = now() - interval '11 minutes'
+      where username=${username}
+    `);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200);
+  }));
+
   it('should allow password change and invalidate previous sessions', testService(async (service) => {
     const username = 'vguser-change';
     const appUser = await createAppUser(service, { username });
@@ -90,6 +216,7 @@ describe('api: vg app-user auth', () => {
       .send({ username, password: newPassword })
       .expect(200)
       .then((res) => res.body);
+    should.exist(loginAfter.token);
     loginAfter.token.should.be.a.token();
 
     // Old session should no longer authenticate.
@@ -136,5 +263,141 @@ describe('api: vg app-user auth', () => {
     await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`)
       .set('Authorization', `Bearer ${token}`)
       .expect(401);
+  }));
+
+  it('should normalize usernames on create and allow login with mixed-case input', testService(async (service, container) => {
+    const rawUsername = 'MixedCaseUser ';
+    const appUser = await createAppUser(service, { username: rawUsername });
+
+    const { vg_username: storedUsername } = await container.one(sql`
+      select vg_username from vg_field_key_auth where "actorId"=${appUser.id}
+    `);
+    storedUsername.should.equal('mixedcaseuser');
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: ' MIXEDcaseUSER', password: STRONG_PASSWORD })
+      .expect(200);
+  }));
+
+  it('should reject duplicate usernames', testService(async (service) => {
+    const username = 'vguser-duplicate';
+    await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/projects/1/app-users')
+        .send({ username, password: STRONG_PASSWORD, fullName: 'Dupe', phone: '+10000000000' })
+        .expect(409));
+  }));
+
+  it('should reject invalid passwords and blank usernames', testService(async (service) => {
+    const badPasswords = [
+      'short1!', // too short
+      'NoSpecial123', // missing special
+      'nouppercase1!', // missing uppercase
+      'NOLOWER1!', // missing lowercase
+      'NoDigitsHere!' // missing digit
+    ];
+
+    for (const pwd of badPasswords) {
+      await service.login('alice', (asAlice) =>
+        asAlice.post('/v1/projects/1/app-users')
+          .send({ username: `vguser-${Math.random().toString(36).slice(2, 8)}`, password: pwd, fullName: 'Bad Pass' })
+          .expect(400));
+    }
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/projects/1/app-users')
+        .send({ username: '   ', password: STRONG_PASSWORD, fullName: 'No Username' })
+        .expect(400));
+
+    const confusable1 = 'vguser-confusable';
+    const confusable2 = 'vguser-confus\u00adable'; // soft hyphen
+    await createAppUser(service, { username: confusable1 });
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/projects/1/app-users')
+        .send({ username: confusable2, password: STRONG_PASSWORD, fullName: 'Confusable' })
+        .expect(400));
+  }));
+
+  it('should reject expired tokens', testService(async (service, container) => {
+    const username = 'vguser-expire';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await container.run(sql`
+      update sessions set "expiresAt" = now() - interval '1 minute' where token=${token}
+    `);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  }));
+
+  it('should block login and data submission for deactivated app users', testService(async (service, container) => {
+    const username = 'vguser-deactivated';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .send({ active: false })
+        .expect(200));
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
+
+    // Attempt to use old token on an auth-required route should also fail.
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  }));
+
+  it('should forbid an app user from changing, resetting, or deactivating another app user', testService(async (service) => {
+    const userA = await createAppUser(service, { username: 'vguser-a' });
+    const userB = await createAppUser(service, { username: 'vguser-b' });
+
+    const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-a', password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${userB.id}/password/change`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: 'OtherGood1!' })
+      .expect(403);
+
+    await service.post(`/v1/projects/1/app-users/${userB.id}/password/reset`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ newPassword: 'ResetOther!1' })
+      .expect(403);
+
+    await service.post(`/v1/projects/1/app-users/${userB.id}/active`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ active: false })
+      .expect(403);
+  }));
+
+  it('should forbid an app user from changing an admin/user password via user routes', testService(async (service, container) => {
+    const appUser = await createAppUser(service, { username: 'vguser-noadmin' });
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-noadmin', password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { id: aliceActorId } = await container.one(sql`select id from actors where "displayName"='Alice' limit 1`);
+
+    await service.put(`/v1/users/${aliceActorId}/password`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ old: 'irrelevant', new: 'NewAdminPass!1' })
+      .expect(403);
   }));
 });

@@ -29,7 +29,8 @@ Purpose: track implementation steps for the vg_* app-user login, password policy
 - [ ] Unit tests for password policy and lockout calculator.
 
 ## Deployment/configuration
-- [ ] Document new config key vg_app_user_session_ttl_days and defaults.
+- [x] Document new config key vg_app_user_session_ttl_days and defaults.
+- [x] Document new config key vg_app_user_session_cap (default 3) and seed in vg_settings.
 - [ ] Document schema changes and rollout order (migrate before deploy). Reference plan/sql/vg_app_user_auth.sql for the migration.
 
 ## Post-deploy verification

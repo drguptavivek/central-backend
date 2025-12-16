@@ -162,4 +162,5 @@ This area of the database deals with the users, their access rights and audit lo
 These are few stand-alone tables. 
 
 - `configs` table hold different application configurations related analytics, backups, etc
+- `vg_settings` stores vg-specific key/value configuration such as `vg_app_user_session_ttl_days` (default seeded to 3 days for app-user session expiry).
 - `knex_migrations` and `knex_migrations_lock` are used internally by Knex.js for keeping database migrations history.

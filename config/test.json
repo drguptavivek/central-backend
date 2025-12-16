@@ -1,0 +1,17 @@
+{
+    "test": {
+      "database": {
+        "host": "postgres14",
+        "user": "odk_test_user",
+        "password": "odk_test_pw",
+        "database": "odk_integration_test"
+      },
+      "env": {
+        "domain": "http://localhost:8989",
+        "sysadminAccount": "no-reply@getodk.org"
+      },
+      "email": {
+        "transport": "json"
+      }
+    }
+  }
