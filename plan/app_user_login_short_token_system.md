@@ -1,74 +1,84 @@
-# Concrete backend plan for app-user login + short-lived tokens
+# Concrete backend plan for app-user login + short-lived tokens (new server, no legacy path)
 
   1. Schema
 
-  - Add to field_keys:
-      - login (optional, unique per project) if you don’t want to reuse displayName as the login identifier.
-      - password (hashed, nullable for legacy field keys).
-  - Migration: add columns, create uniqueness constraint on (projectId, login) if login is used, and backfill
-    existing rows with null passwords.
+  - New table vg_field_key_auth (one-to-one with field_keys via actorId primary key/foreign key):
+      - actorId integer primary key references field_keys("actorId") on delete cascade.
+      - vg_username text not null (stored lowercase/trimmed); check lower(trim(vg_username)) = vg_username; unique; not displayName.
+      - vg_password_hash (not null); store bcrypt hash.
+      - vg_phone (string, normalize to E.164); nullable if not provided (validated in app).
+      - vg_active boolean default true.
+    Index: unique on vg_username; optional index on vg_active.
+  - New table vg_settings (id serial, vg_key_name text, vg_key_value text) to store vg_app_user_session_ttl_days (days or seconds) and future vg_* configs; seed row ('vg_app_user_session_ttl_days','3').
+  - New table vg_app_user_login_attempts for tracking login failures/successes; rows retained indefinitely.
+  - Migration: create new tables; no changes to field_keys columns; provided as separate SQL at plan/sql/vg_app_user_auth.sql to apply via psql.
 
   2. App User create/update API (/projects/:projectId/app-users)
 
-  - Accept login (optional) and password in the payload.
-  - If password provided, hash it (reuse user bcrypt helper) before storing.
-  - If password is set:
-      - Do NOT auto-issue a 9999-year session token.
-  - If password is absent (legacy behavior):
-      - Keep current behavior (issue long-lived token) to avoid breaking existing deployments.
-  - Optionally allow password update endpoint/flag to set/change the hash.
+  - Require payload: { username, password, fullName (displayName), phone?, active? } (maps to vg_* columns).
+  - Enforce password policy: min 10 chars; at least one upper, one lower, one digit, one special from
+    ~!@#$%^&*()_+-=,. ; reject otherwise.
+  - Hash password with existing user bcrypt helper before storing.
+  - Enforce username uniqueness per constraint; never reuse displayName for login.
+  - Do NOT auto-issue long-lived tokens; only short-lived sessions via login endpoint.
+  - Allow update of phone, fullName, active; password change via dedicated endpoint only.
 
   3. Login endpoint
 
-  - New route: POST /projects/:projectId/app-users/login.
-  - Payload: { login: string | displayName, password: string } (decide whether to prefer login or fall back to
-    displayName).
-  - Lookup field_key by projectId + login/displayName; verify password hash.
-  - On success:
-      - Issue a short-lived session via Sessions.create(actor, expiresAt = now + N days) (e.g., 5 days).
-      - Return { token, projectId } or a managed QR JSON (server_url with /v1/key/<token>/projects/:projectId>).
-  - On failure: generic auth failed.
+  - Route: POST /projects/:projectId/app-users/login.
+  - Payload: { username, password } (no displayName lookup).
+  - Look up by global username; verify hash; reject inactive accounts.
+  - Rate limiting/throttling per username+IP; lockout after 5 failed attempts within 5 minutes; lock duration 10 minutes; store events in vg_app_user_login_attempts.
+  - On success: Sessions.create(actor, expiresAt = now + server-config TTL); return { token, projectId } and
+    optionally managed QR JSON.
+  - On failure: generic auth failed; audit events for success/failure.
 
-  4. Revocation endpoint
+  4. Password change/reset
 
-  - New route: POST /projects/:projectId/app-users/:id/revoke (or /logout).
-  - Action: Sessions.terminateByActorId(fieldKey.actorId); optionally also terminate the current token from
-    context.
-  - Use existing auth to require field_key.delete or similar admin verb, or allow self-revoke if authenticated as
-    that field key.
+  - Change (self): POST /projects/:projectId/app-users/:id/password/change with { oldPassword, newPassword };
+    enforce policy; verify old password; rotate all sessions for that actor; audit.
+  - Reset (admin): POST /projects/:projectId/app-users/:id/password/reset with { newPassword } (or forced reset
+    flag); enforce policy; rotate sessions; audit; deliver password out-of-band if needed.
 
-  5. Session issuance defaults
+  5. Revocation and deactivate
 
-  - Update FieldKeys.create:
-      - If a password is present, skip creating the long-lived session.
-      - If no password, preserve current long-lived token issuance for backward compatibility.
-  - (Optional) Add an admin knob to disable long-lived tokens globally for field keys.
+  - Self revoke: POST /projects/:projectId/app-users/:id/revoke; only allowed if authenticated actor matches
+    target; terminates all sessions for that actor including current token.
+  - Admin revoke: POST /projects/:projectId/app-users/:id/revoke-admin; requires admin privilege; terminates all
+    sessions for target.
+  - Deactivate/reactivate (admin): toggle active flag; on deactivate, terminate all sessions; audit.
 
-  6. Auth handler
+  6. Session issuance defaults
 
-  - No change needed for /key/<token>; it already looks up sessions and enforces expiry.
-  - With short-lived sessions, expired tokens will be rejected naturally.
+  - FieldKeys.create never issues long-lived tokens.
+  - Sessions.create reads TTL from DB config; no sliding refresh unless explicitly added later.
 
-  7. Backward compatibility and migration behavior
+  7. Auth handler
 
-  - Existing field keys (no password) continue to work with their long-lived tokens.
-  - New password-protected field keys only function after the login endpoint issues a short-lived token.
-  - Document that managed/legacy QR generation should be adjusted to:
-      - For password-protected field keys: do not embed password; use the login endpoint to fetch a token/QR.
-      - For legacy: unchanged.
+  - No change needed for /key/<token>; it already validates sessions and expiry.
+  - Reject auth for inactive accounts even if token exists.
 
-  8. Admin UX considerations
+  8. Browser and app clients
 
-  - Expose password set/update in the app-user API/UI.
-  - Provide the login endpoint response in a form your AIIMS wrapper can consume (token + projectId, optionally
-    full managed QR JSON).
-  - Optionally add an API to list active sessions for a field key if you want visibility.
+  - Endpoints are callable from browsers (admins or app-user self-service) and from Collect.
+  - Prefer header/bearer token auth and avoid cookies on these routes to remove CSRF surface.
+  - If cookies ever used for admin UI, set SameSite=Lax/Strict and require a CSRF token (double-submit or
+    synchronizer token) and reject requests missing the CSRF header/token. Consider CORS restrictions for admin
+    UI origin.
+  - Collect continues to send JSON bodies + Authorization header; ensure cookies are ignored for login routes.
 
-## Rationale, choices, gotchas
+  9. Audit and telemetry
 
-- Why short-lived tokens: limits blast radius of leaked devices; re-login plus PIN is required after expiry, unlike current 9999-year tokens.
-- Why keep field-key tokens: Collect already uses `/key/<token>`; no Collect changes needed. We only change how the token is obtained.
-- Why add passwords: gives an interactive login step so tokens are not printed in QR codes or pre-provisioned; admin can gate issuance behind credentials.
-- Backward compatibility: legacy field keys without passwords keep working; we avoid breaking existing deployments.
-- Token vs Basic: Basic would require extending authHandler for field_keys and lacks easy expiry/rotation; issuing short sessions is cleaner and revocable.
-- Gotchas: deciding the login identifier (displayName vs dedicated login); must hash passwords; ensure we skip auto-issuing long-lived sessions when password is set; revocation should kill all sessions for that actor; document that managed QR should not include passwords (login endpoint returns token/QR).
+  - Audit: create/update/deactivate/reactivate, password change/reset, login success/failure, session
+    issued/revoked, config TTL changes; include actor, target, IP/device, timestamp. Namespaced action identifiers
+    vg_* for new events.
+  - Monitoring: log rate-limit events and lockouts.
+
+ 10. Namespacing for code artifacts
+
+  - New modules/helpers, functions, and audit action identifiers use vg_ prefixes (e.g., vg_app_user_passwords,
+    vg_app_user_auth, vg_app_user_rate_limit) to reduce collision risk on future upstream changes.
+
+## Open questions
+
+- Session TTL default set to 3 days in config.
