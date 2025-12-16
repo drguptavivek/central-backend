@@ -127,6 +127,71 @@ describe('api: vg app-user auth', () => {
     `);
   }));
 
+  it('should log audit events for create, login success/failure, password ops, revoke, deactivate', testService(async (service, container) => {
+    const username = 'vguser-audit';
+    const appUser = await createAppUser(service, { username });
+
+    const latestAuditDetails = async (action, usernameFilter = null) => container.maybeOne(sql`
+      select details from audits
+      where action=${action}
+        ${usernameFilter != null ? sql`and details->>'username'=${usernameFilter}` : sql``}
+      order by "loggedAt" desc, id desc
+      limit 1
+    `).then((opt) => opt.map((row) => row.details).orNull());
+
+    // Create audit
+    const createAudit = await latestAuditDetails('vg.app_user.create', username);
+    should.exist(createAudit);
+    createAudit.username.should.equal(username);
+
+    // Failed login
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: 'WrongPass!1' })
+      .expect(401);
+    const failAudit = await latestAuditDetails('vg.app_user.login.failure', username);
+    should.exist(failAudit);
+    should.exist(failAudit.username);
+
+    // Successful login
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+    const successAudit = await latestAuditDetails('vg.app_user.login.success', username);
+    should.exist(successAudit);
+    should.exist(successAudit.username);
+
+    // Password change
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: 'AnotherGood1!' })
+      .expect(200);
+    const changeAudit = await latestAuditDetails('vg.app_user.password.change', username);
+    should.exist(changeAudit);
+
+    // Reset and deactivate
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: STRONG_PASSWORD })
+        .expect(200));
+    const resetAudit = await latestAuditDetails('vg.app_user.password.reset', username);
+    should.exist(resetAudit);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .send({ active: false })
+        .expect(200));
+    const deactivateAudit = await latestAuditDetails('vg.app_user.deactivate', username);
+    should.exist(deactivateAudit);
+
+    // Revoke (admin-initiated after deactivation to ensure audit is written)
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`)
+        .expect(200));
+    const revokeAudit = await latestAuditDetails('vg.app_user.sessions.revoke', username);
+    should.exist(revokeAudit);
+  }));
+
   it('should reject a third simultaneous session when DB cap is 2', testService(async (service, container) => {
     const username = 'vguser-cap-2';
     const appUser = await createAppUser(service, { username });

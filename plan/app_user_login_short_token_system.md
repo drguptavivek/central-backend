@@ -72,7 +72,10 @@
 
   - Audit: create/update/deactivate/reactivate, password change/reset, login success/failure, session
     issued/revoked, config TTL changes; include actor, target, IP/device, timestamp. Namespaced action identifiers
-    vg_* for new events.
+    vg_* for new events. Implemented via `container.Audits.log` in domain layer: vg.app_user.create/login.success/
+    login.failure/password.change/password.reset/sessions.revoke/activate/deactivate. Requires `actors` acteeId,
+    so vg auth queries join actors to carry acteeId for audit payloads. Ensure `Audits` is injected into vg
+    resources/domain calls.
   - Monitoring: log rate-limit events and lockouts.
 
  10. Namespacing for code artifacts
