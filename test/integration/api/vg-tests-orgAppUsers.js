@@ -1,6 +1,7 @@
 // VG-specific adaptations of legacy app-user tests for the short-lived token flow.
 const should = require('should');
 const { testService, withClosedForm } = require('../setup');
+const { sql } = require('slonik');
 require('../assertions');
 const testData = require('../../data/xml');
 
@@ -63,4 +64,91 @@ describe('vg org app-users (short token flow)', () => {
     await asAlice.post(`/v1/projects/1/forms/withAttachments/assignments/app-user/${appUser.id}`).expect(200);
     await service.get(`/v1/key/${token}/projects/1/forms/withAttachments`).expect(403);
   })));
+
+  it('rejects submissions after admin revoke', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const appUser = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, appUser);
+    await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${appUser.id}`).expect(200);
+    await asAlice.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`).expect(200);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+  }));
+
+  it('rejects submissions when app user is deactivated', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const appUser = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, appUser);
+    await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${appUser.id}`).expect(200);
+    await asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`).send({ active: false }).expect(200);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+  }));
+
+  it('rejects submissions using a token from another project', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'Second Project' }).expect(200).then(({ body }) => body);
+    const appUser = await createAppUser(service, asAlice, project2);
+    const token = await loginAppUser(service, appUser);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+  }));
+
+  it('rejects submissions using an expired token', testService(async (service, container) => {
+    const asAlice = await service.login('alice');
+    const appUser = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, appUser);
+    await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${appUser.id}`).expect(200);
+    await container.run(sql`update sessions set "expiresAt" = now() - interval '1 hour' where token=${token}`);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+  }));
+
+  it('rejects submissions with malformed/unknown tokens', testService(async (service) => {
+    await service.post('/v1/key/not-a-token/projects/1/forms/simple/submissions')
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(401);
+  }));
+
+  it('rejects submissions after password change using old token', testService(async (service, container) => {
+    const asAlice = await service.login('alice');
+    const appUser = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, appUser);
+    await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${appUser.id}`).expect(200);
+    // Change password via self route using current token to invalidate sessions.
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: 'NewPass!2Y' })
+      .expect(200);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+    // New token should work.
+    const newToken = await loginAppUser(service, { username: appUser.username, password: 'NewPass!2Y' });
+    await service.post(`/v1/key/${newToken}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(200);
+  }));
+
+  it('rejects submissions for unassigned forms', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const appUser = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, appUser);
+    // No assignment performed
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
+  }));
 });
