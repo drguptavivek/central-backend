@@ -86,3 +86,22 @@
 ## Open questions
 
 - Session TTL default set to 3 days in config.
+
+## 11. Implementation Updates (2025-12-17)
+
+### System Settings API
+To support the Admin Settings UI, the following endpoints were implemented in `server/lib/resources/vg-app-user-auth.js`:
+
+-   **GET /system/settings**: Retrieves current session configuration (`vg_app_user_session_ttl_days`, `vg_app_user_session_cap`).
+    -   **Access**: Requires `config.read` permission (Admin).
+    -   **Purpose**: Allows the frontend to display current settings to administrators.
+-   **PUT /system/settings**: Updates session configuration.
+    -   **Access**: Requires `config.set` permission (Admin).
+    -   **Purpose**: Allows administrators to modify session TTL and concurrency caps.
+
+### Database Changes
+-   **`vg_settings` Table**: Confirmed existence and usage for storing `vg_app_user_session_ttl_days` and `vg_app_user_session_cap`.
+-   **`upsertSetting` Query**: Added to `server/lib/model/query/vg-app-user-auth.js` to handle safe updates (insert or update on conflict) for configuration keys.
+
+### Reason & Purpose
+These changes were necessary to fulfill the requirement of an "Admin Settings UI" where administrators can configure App User session behavior without direct database access. This completes the management loop for the short-lived token system.
