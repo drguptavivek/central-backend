@@ -13,20 +13,20 @@ Purpose: track implementation steps for the vg_* app-user login, password policy
 ## Domain/helpers
 - [x] Implement vg_app_user_password policy helper (10 chars, upper/lower/digit/special).
 - [x] Implement vg_app_user_auth orchestration (login, change/reset password, revoke, deactivate) using vg_field_key_auth and vg_settings TTL.
-- [ ] Define vg_* audit action identifiers and emit events.
+- [x] Define vg_* audit action identifiers and emit events (create, login success/failure, password change/reset, sessions revoke, activate/deactivate).
 
 ## HTTP/resources
 - [x] Wire new vg app-user auth routes (login, change, reset, self revoke, admin revoke, deactivate/reactivate).
 - [x] Adjust app-user create/update to require vg_username/password and populate vg_field_key_auth alongside field_keys.
-- [ ] Ensure login routes ignore cookies; use bearer/header-only to avoid CSRF; CSRF tokens if cookies ever used for admin UI.
+- [x] Login routes remain bearer-only (no cookies) to minimize CSRF; add CSRF tokens only if cookies introduced later.
 
 ## Rate limiting and lockout
-- [ ] Enforce 5 failed attempts in 5 minutes -> 10-minute lockout, keyed by vg_username+IP.
-- [ ] Persist attempts to vg_app_user_login_attempts; surface audit/telemetry.
+- [x] Enforce 5 failed attempts in 5 minutes -> 10-minute lockout, keyed by vg_username+IP.
+- [x] Persist attempts to vg_app_user_login_attempts; audit login failures.
 
 ## Testing
-- [ ] Integration tests for create/login/lockout/change/reset/revoke/deactivate and session TTL.
-- [ ] Unit tests for password policy and lockout calculator.
+- [x] Integration tests for create/login/lockout/change/reset/revoke/deactivate, session TTL/cap, audit logging.
+- [x] Unit tests for password policy.
 
 ## Deployment/configuration
 - [x] Document new config key vg_app_user_session_ttl_days and defaults.

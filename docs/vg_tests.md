@@ -21,3 +21,4 @@ Key scenarios covered for the vg app-user auth / short-lived token work.
 Run in this session:
 - ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js`
 - ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js`
+- ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-tests-orgAppUsers.js` (vg-only rewrite of legacy app-user routes)
