@@ -11,6 +11,12 @@ Key scenarios covered for the vg app-user auth / short-lived token work.
 | Password change/reset/deactivate behaviors | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Password change drops old sessions; admin reset + deactivate block login; deactivated token rejected | same as above |
 | Username rules and RBAC guards | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Normalizes usernames, rejects duplicates/blank/invalid, enforces self-only ops and blocks user password routes | same as above |
 | Expired token rejection | `test/integration/api/vg-app-user-auth.js` | ✅ Pass | Manually expired session cannot be used | same as above |
+| Submission: happy path via /key/:token | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | VG app-user login token allows assigned form submission | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-tests-orgAppUsers.js` |
+| Submission denied after admin revoke | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Revoke-admin blocks subsequent submissions | same as above |
+| Submission denied when deactivated | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Deactivated app-user token rejected | same as above |
+| Submission denied for unassigned form | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | No assignment → 403 on submit | same as above |
+| Submission denied with expired/foreign/malformed tokens | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Covers expired token, token from another project, and malformed token cases | same as above |
+| Submission with old token after password change fails; new token works | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Old token 403, new token 200 post-change | same as above |
 | Unit: password policy accept | `test/unit/util/vg-password.js` | ✅ Pass | Valid password returns true | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js` |
 | Unit: too short | `test/unit/util/vg-password.js` | ✅ Pass | Rejects short password | same as above |
 | Unit: missing special char | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing special | same |
