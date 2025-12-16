@@ -13,5 +13,3 @@ node_modules/
 .vscode
 /junit-reports/
 /config/development.json
-
-local.json
