@@ -37,12 +37,14 @@ describe('api: vg app-user auth', () => {
     should.exist(login.token);
     login.projectId.should.equal(1);
     login.token.should.be.a.token();
+    should.exist(login.expiresAt);
 
     const { expiresAt, createdAt } = await container.one(sql`
       select "expiresAt", "createdAt" from sessions where token=${login.token}
     `);
     const diffHours = (new Date(expiresAt) - new Date(createdAt)) / (60 * 60 * 1000);
     diffHours.should.be.approximately(72, 0.1);
+    new Date(login.expiresAt).getTime().should.be.approximately(new Date(expiresAt).getTime(), 1000);
   }));
 
   it('should lock out after five failed attempts per username and IP', testService(async (service, container) => {
