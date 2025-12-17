@@ -64,6 +64,20 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   ```
   `token` is always `null` in listings; use `/login` for a short-lived token. Extended metadata (`X-Extended-Metadata: true`) also returns `createdBy` and `lastUsed`.
 
+### Update app user (name/phone)
+**PATCH /projects/:projectId/app-users/:id**
+
+- Auth: Admin/manager on the project.
+- Request (JSON): both fields optional; omit to leave unchanged.
+  ```json
+  { "fullName": "New Name", "phone": "+15557654321" }
+  ```
+  `fullName` must be a non-empty string; `phone` is trimmed, optional, and capped at 25 characters. `username` is immutable once created.
+- Response — HTTP 200, application/json (no token is ever returned):
+  ```json
+  { "id": 12, "projectId": 1, "displayName": "New Name", "phone": "+15557654321", "active": true, "username": "collect-user", "token": null }
+  ```
+
 ### Change password (self)
 **POST /projects/:projectId/app-users/:id/password/change**
 
