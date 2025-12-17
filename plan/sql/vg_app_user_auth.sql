@@ -36,4 +36,9 @@ CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_user_createdat ON vg_app_user_login_attempts (username, "createdAt" DESC);
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_ip_createdat ON vg_app_user_login_attempts (ip, "createdAt" DESC);
 
+-- Ensure admin/manager roles can update app users (displayName/phone).
+UPDATE roles
+SET verbs = coalesce(verbs, '[]'::jsonb) || '["field_key.update"]'::jsonb
+WHERE system IN ('admin', 'manager');
+
 COMMIT;
