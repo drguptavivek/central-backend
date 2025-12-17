@@ -39,9 +39,9 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   ```
 - Response — HTTP 200, application/json:
   ```json
-  { "token": "abcd1234...tokenchars...", "projectId": 1, "expiresAt": "2025-12-19T16:00:00.000Z" }
+  { "id": 12, "token": "abcd1234...tokenchars...", "projectId": 1, "expiresAt": "2025-12-19T16:00:00.000Z" }
   ```
-  `projectId` comes from the linked `field_keys` row (app users are always project-scoped). `expiresAt` is the ISO timestamp of the short-lived bearer token and is set from `vg_app_user_session_ttl_days`. Cookies ignored.
+  `id` is the app-user ID (Field Key actor id) needed for self-revoke/password change routes. `projectId` comes from the linked `field_keys` row (app users are always project-scoped). `expiresAt` is the ISO timestamp of the short-lived bearer token and is set from `vg_app_user_session_ttl_days`. Cookies ignored.
 - Failure: HTTP 401.2 `authenticationFailed` (generic message).
 - Lockout: 5 failed attempts in 5 minutes per `username+IP` → 10-minute lock. Attempts are logged in `vg_app_user_login_attempts` with success/failure.
 
@@ -109,7 +109,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 ### Revoke own sessions
 **POST /projects/:projectId/app-users/:id/revoke**
 
-- Auth: App user bearer token (self).
+- Auth: App user bearer token (self). `id` is the app-user ID returned by `/login`.
 - Response — HTTP 200, application/json:
   ```json
   { "success": true }
