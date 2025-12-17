@@ -35,8 +35,10 @@ describe('api: vg app-user auth', () => {
       .then((res) => res.body);
 
     should.exist(login.token);
+    should.exist(login.id);
     login.projectId.should.equal(1);
     login.token.should.be.a.token();
+    login.id.should.equal(appUser.id);
     should.exist(login.expiresAt);
 
     const { expiresAt, createdAt } = await container.one(sql`
@@ -75,13 +77,13 @@ describe('api: vg app-user auth', () => {
     const username = 'vguser-cap';
     const appUser = await createAppUser(service, { username });
 
-    const tokens = [];
+    const logins = [];
     for (let i = 0; i < 4; i += 1) {
-      const { token } = await service.post('/v1/projects/1/app-users/login')
+      const login = await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: STRONG_PASSWORD })
         .expect(200)
         .then((res) => res.body);
-      tokens.push(token);
+      logins.push(login);
     }
 
     const { count } = await container.one(sql`
@@ -90,8 +92,8 @@ describe('api: vg app-user auth', () => {
     Number(count).should.equal(3);
 
     // Oldest token should be gone.
-    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
-      .set('Authorization', `Bearer ${tokens[0]}`)
+    await service.post(`/v1/projects/1/app-users/${logins[0].id}/revoke`)
+      .set('Authorization', `Bearer ${logins[0].token}`)
       .expect(401);
   }));
 
@@ -105,13 +107,13 @@ describe('api: vg app-user auth', () => {
       ON CONFLICT (vg_key_name) DO UPDATE SET vg_key_value='2'
     `);
 
-    const tokens = [];
+    const logins = [];
     for (let i = 0; i < 3; i += 1) {
-      const { token } = await service.post('/v1/projects/1/app-users/login')
+      const login = await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: STRONG_PASSWORD })
         .expect(200)
         .then((res) => res.body);
-      tokens.push(token);
+      logins.push(login);
     }
 
     const { count } = await container.one(sql`
@@ -119,8 +121,8 @@ describe('api: vg app-user auth', () => {
     `);
     Number(count).should.equal(2);
 
-    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
-      .set('Authorization', `Bearer ${tokens[0]}`)
+    await service.post(`/v1/projects/1/app-users/${logins[0].id}/revoke`)
+      .set('Authorization', `Bearer ${logins[0].token}`)
       .expect(401);
 
     // Reset cap to default for other tests.
@@ -155,7 +157,7 @@ describe('api: vg app-user auth', () => {
     should.exist(failAudit.username);
 
     // Successful login
-    const { token } = await service.post('/v1/projects/1/app-users/login')
+    const { token, id } = await service.post('/v1/projects/1/app-users/login')
       .send({ username, password: STRONG_PASSWORD })
       .expect(200)
       .then((res) => res.body);
@@ -264,7 +266,7 @@ describe('api: vg app-user auth', () => {
     const username = 'vguser-change';
     const appUser = await createAppUser(service, { username });
 
-    const { token } = await service.post('/v1/projects/1/app-users/login')
+    const { token, id } = await service.post('/v1/projects/1/app-users/login')
       .send({ username, password: STRONG_PASSWORD })
       .expect(200)
       .then((res) => res.body);
@@ -287,7 +289,7 @@ describe('api: vg app-user auth', () => {
     loginAfter.token.should.be.a.token();
 
     // Old session should no longer authenticate.
-    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+    await service.post(`/v1/projects/1/app-users/${id}/revoke`)
       .set('Authorization', `Bearer ${token}`)
       .expect(401);
   }));
