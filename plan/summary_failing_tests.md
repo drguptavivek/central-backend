@@ -11,7 +11,7 @@
 
 ## Submissions API flow (≈60)
 - Source: `test/integration/api/submissions.js`.
-- Symptoms: 400/409/500 mismatches on edit/patch/delete/attachment and app-user submission cases; one base URL expectation mismatch (`https://central-dev` vs `http://localhost:8989`).
+- Symptoms: 400/409/500 mismatches on edit/patch/delete/attachment and app-user submission cases; one base URL expectation mismatch (`https://central.local` vs `http://localhost:8989`).
 - Coverage: partially mirrored in VG submission tests for short-token app users; core legacy expectations still failing.
 - Next: decide whether to align behavior to legacy expectations, or update/skip those specs for the customized flow.
 

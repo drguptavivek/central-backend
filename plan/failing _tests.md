@@ -835,10 +835,10 @@
        GET /Entities
          should return nextURL:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D
+      -https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D
       +http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24skiptoken=01eyJ1dWlkIjoiMzIzYTlmY2ItYTFiNS00OWYyLWFiYzAtMTEwZGU4ZGMzMGE0In0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -853,10 +853,10 @@
        GET /Entities
          should not duplicate or skip entities - opaque cursor:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D
+      -https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D
       +http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=1&%24count=true&%24skiptoken=01eyJ1dWlkIjoiY2MxMDNjYWItN2UwMi00MjVjLWE5NDQtN2ZhZWNiMTFjNTBmIn0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -871,10 +871,10 @@
        GET /Entities
          should not return deleted entities - opaque cursor:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D' to be 'http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D
+      -https://central.local/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D
       +http://localhost:8989/v1/projects/1/datasets/people.svc/Entities?%24top=2&%24count=true&%24skiptoken=01eyJ1dWlkIjoiN2RmOTMwMDAtZDUyNi00ZDQ3LWFlZTQtOGE5NWZiYjY4NDJjIn0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -922,7 +922,7 @@
          should return service document:
 
       AssertionError: expected Object {
-  '@odata.context': 'https://central-dev/v1/projects/1/datasets/people.svc/$metadata',
+  '@odata.context': 'https://central.local/v1/projects/1/datasets/people.svc/$metadata',
   value: Array [
     Object { name: 'Entities', kind: 'EntitySet', url: 'Entities' }
   ]
@@ -931,11 +931,11 @@
   value: Array [
     Object { name: 'Entities', kind: 'EntitySet', url: 'Entities' }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/datasets/people.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/datasets/people.svc/$metadata')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/datasets/people.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/datasets/people.svc/$metadata')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/datasets/people.svc/$metadata"
+      -  "@odata.context": "https://central.local/v1/projects/1/datasets/people.svc/$metadata"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/datasets/people.svc/$metadata"
          "value": [
            {
@@ -955,7 +955,7 @@
          should return an OData service document:
 
       AssertionError: expected Object {
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata',
   value: Array [
     Object { name: 'Submissions', kind: 'EntitySet', url: 'Submissions' },
     Object {
@@ -974,11 +974,11 @@
       url: 'Submissions.children.child'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata"
          "value": [
            {
@@ -1020,7 +1020,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1046,11 +1046,11 @@
       name: 'Vick'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1087,7 +1087,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions',
   value: Array [
@@ -1108,11 +1108,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
          "value": [
            {
@@ -1149,7 +1149,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions',
   value: Array [
@@ -1170,11 +1170,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
          "value": [
            {
@@ -1217,7 +1217,7 @@
       '__Submissions-id': 'double'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -1244,11 +1244,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -1277,8 +1277,8 @@
       '__Submissions-id': 'double'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
-  '@odata.nextLink': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/Submissions(\'double\')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
+  '@odata.nextLink': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/Submissions(\'double\')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   '@odata.nextLink': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/Submissions(\'double\')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D',
@@ -1292,12 +1292,12 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
-      -  "@odata.nextLink": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/Submissions('double')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.nextLink": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/Submissions('double')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.nextLink": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/Submissions('double')/children/child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6ImI2ZTkzYTgxYTUzZWVkMDU2NmU2NWU0NzJkNGE0YjlhZTM4M2VlNmQifQ%3D%3D"
          "value": [
@@ -1318,17 +1318,17 @@
 
       AssertionError: expected Object {
   value: Array [],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   '@odata.count': 3
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   '@odata.count': 3,
   value: Array []
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
          "@odata.count": 3
          "value": []
@@ -1347,15 +1347,15 @@
 
       AssertionError: expected Object {
   value: Array [],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   value: Array []
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
          "value": []
        }
@@ -1395,7 +1395,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
 } to contain Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions',
   value: Array [
@@ -1406,8 +1406,8 @@
     }
   ]
 }
-    expected 'https://central-dev/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions' to contain 'http://localhost:8989/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
-        expected 'https://central-dev/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions' to be 'http://localhost:8989/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
+    expected 'https://central.local/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions' to contain 'http://localhost:8989/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
+        expected 'https://central.local/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions' to be 'http://localhost:8989/v1/projects/1/forms/double%20repeat.svc/$metadata#Submissions'
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
       at Assertion.value [as containDeep] (node_modules/should/cjs/should.js:356:19)
       at /usr/odk/test/integration/api/odata.js:390:31
@@ -1444,7 +1444,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1470,11 +1470,11 @@
       name: 'Vick'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1504,7 +1504,7 @@
       __system: Object { status: null }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1518,11 +1518,11 @@
       name: 'Vick'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1558,7 +1558,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1578,11 +1578,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1607,7 +1607,7 @@
     Object { name: 'Fluttershy' },
     Object { name: 'Princess Luna' }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy',
   value: Array [
@@ -1616,11 +1616,11 @@
     Object { name: 'Fluttershy' },
     Object { name: 'Princess Luna' }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child.toys.toy"
          "value": [
            {
@@ -1650,7 +1650,7 @@
       __id: '8954b393f82c1833abb19be08a3d6cb382171f54'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -1664,11 +1664,11 @@
       name: 'Chelsea'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -1753,7 +1753,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1822,11 +1822,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1889,7 +1889,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -1936,11 +1936,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -1982,7 +1982,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2008,11 +2008,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2051,7 +2051,7 @@
       '__Submissions-id': 'rtwo'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -2074,11 +2074,11 @@
       age: 6
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -2121,8 +2121,8 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
-  '@odata.nextLink': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
+  '@odata.nextLink': 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   '@odata.nextLink': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9',
@@ -2150,12 +2150,12 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
-      -  "@odata.nextLink": "https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.nextLink": "https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.nextLink": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9"
          "value": [
@@ -2174,10 +2174,10 @@
        /Submissions.xyz.* GET
          should limit Submissions:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -2192,10 +2192,10 @@
        /Submissions.xyz.* GET
          should ignore $skip when $skipToken is given:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -2210,10 +2210,10 @@
        /Submissions.xyz.* GET
          should have no impact on skipToken when a new submission is created:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=2&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnR3byJ9
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -2228,10 +2228,10 @@
        /Submissions.xyz.* GET
          should limit and filter Submissions:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24filter=not+__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -2246,10 +2246,10 @@
        /Submissions.xyz.* GET
          should limit and return selected fields of Submissions:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24select=age&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -2289,8 +2289,8 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
-  '@odata.nextLink': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24count=true&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
+  '@odata.nextLink': 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24count=true&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D',
   '@odata.count': 3
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
@@ -2320,14 +2320,14 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "@odata.count": 3
-      -  "@odata.nextLink": "https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24count=true&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D"
+      -  "@odata.nextLink": "https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24count=true&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D"
       +  "@odata.nextLink": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions?%24top=1&%24count=true&%24skiptoken=01eyJpbnN0YW5jZUlkIjoicnRocmVlIn0%3D"
          "value": [
            {
@@ -2368,7 +2368,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2393,11 +2393,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2460,7 +2460,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2507,11 +2507,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2553,7 +2553,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2579,11 +2579,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2625,7 +2625,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2651,11 +2651,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2696,7 +2696,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2721,11 +2721,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2767,7 +2767,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2793,11 +2793,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2839,7 +2839,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -2865,11 +2865,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -2923,7 +2923,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions',
   value: Array [
@@ -2960,11 +2960,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
          "value": [
            {
@@ -3017,7 +3017,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions',
   value: Array [
@@ -3054,11 +3054,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/encrypted.svc/$metadata#Submissions"
          "value": [
            {
@@ -3085,8 +3085,8 @@
       '__Submissions-id': 'rtwo'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
-  '@odata.nextLink': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
+  '@odata.nextLink': 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
   '@odata.nextLink': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D',
@@ -3098,12 +3098,12 @@
       age: 4
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
-      -  "@odata.nextLink": "https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.nextLink": "https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.nextLink": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D"
          "value": [
@@ -3137,7 +3137,7 @@
       '__Submissions-id': 'rtwo'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -3154,11 +3154,11 @@
       age: 6
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -3186,7 +3186,7 @@
       '__Submissions-id': 'rtwo'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -3197,11 +3197,11 @@
       age: 6
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -3220,10 +3220,10 @@
        /Submissions.xyz.* GET
          should limit subtable results:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -3238,10 +3238,10 @@
        /Submissions.xyz.* GET
          should reject unmatched repeatId:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=2&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -3256,10 +3256,10 @@
        /Submissions.xyz.* GET
          should limit and filter subtable:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
+      AssertionError: expected 'https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D' to equal 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D'
       + expected - actual
 
-      -https://central-dev/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
+      -https://central.local/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       +http://localhost:8989/v1/projects/1/forms/withrepeat.svc/Submissions.children.child?%24top=1&%24filter=%24root%2FSubmissions%2F__system%2FreviewState+eq+%27rejected%27&%24skiptoken=01eyJyZXBlYXRJZCI6IjUyZWZmOWVhODI1NTAxODM4ODBiOWQ2NGMyMDQ4NzY0MmZhNmU2MGMifQ%3D%3D
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
@@ -3276,15 +3276,15 @@
 
       AssertionError: expected Object {
   value: Array [],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   value: Array [],
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child'
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat.svc/$metadata#Submissions.children.child"
          "value": []
        }
@@ -3306,7 +3306,7 @@
     Object { name: 'Bob', __id: 'rtwo' },
     Object { name: 'Alice', __id: 'rone' }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -3314,11 +3314,11 @@
     Object { __id: 'rtwo', name: 'Bob' },
     Object { __id: 'rone', name: 'Alice' }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -3342,7 +3342,7 @@
     Object { meta: Object { instanceID: 'rtwo' } },
     Object { meta: Object { instanceID: 'rone' } }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions',
   value: Array [
@@ -3350,11 +3350,11 @@
     Object { meta: Object { instanceID: 'rtwo' } },
     Object { meta: Object { instanceID: 'rone' } }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions"
          "value": [
            {
@@ -3383,7 +3383,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions',
   value: Array [
@@ -3395,11 +3395,11 @@
       }
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/nestedGroup.svc/$metadata#Submissions"
          "value": [
            {
@@ -3433,7 +3433,7 @@
       __id: '1291953ccbe2e5e866f7ab3fefa3036d649186d3'
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child',
   value: Array [
@@ -3450,11 +3450,11 @@
       name: 'Blaine'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat.svc/$metadata#Submissions.children.child"
          "value": [
            {
@@ -3477,18 +3477,18 @@
     Object { address: Object { city: 'Toronto', country: 'Canada' } },
     Object { address: Object { city: 'New York', country: 'US' } }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat',
   value: Array [
     Object { address: Object { city: 'Toronto', country: 'Canada' } },
     Object { address: Object { city: 'New York', country: 'US' } }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat' and B has 'http://localhost:8989/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat' and B has 'http://localhost:8989/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/groupRepeat.svc/$metadata#Submissions.child_repeat"
          "value": [
            {
@@ -3508,7 +3508,7 @@
          should return results even when repeat name is not a valid OData name :
 
       AssertionError: expected Object {
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata',
   value: Array [
     Object { name: 'Submissions', kind: 'EntitySet', url: 'Submissions' },
     Object {
@@ -3527,11 +3527,11 @@
       url: 'Submissions.q1_8_test'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/odata_sanitize_repeat_name.svc/$metadata"
          "value": [
            {
@@ -3552,7 +3552,7 @@
            should return an OData service document:
 
       AssertionError: expected Object {
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata',
   value: Array [
     Object { name: 'Submissions', kind: 'EntitySet', url: 'Submissions' }
   ]
@@ -3561,11 +3561,11 @@
   value: Array [
     Object { name: 'Submissions', kind: 'EntitySet', url: 'Submissions' }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata"
          "value": [
            {
@@ -3585,7 +3585,7 @@
            should return the appropriate document for the draft:
 
       AssertionError: expected Object {
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata',
+  '@odata.context': 'https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata',
   value: Array [
     Object { name: 'Submissions', kind: 'EntitySet', url: 'Submissions' },
     Object {
@@ -3604,11 +3604,11 @@
       url: 'Submissions.children.child'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata' and B has 'http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/simple/draft.svc/$metadata"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/simple/draft.svc/$metadata"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/simple/draft.svc/$metadata"
          "value": [
            {
@@ -3651,7 +3651,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions',
   value: Array [
@@ -3677,11 +3677,11 @@
       name: 'Vick'
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
          "value": [
            {
@@ -3767,7 +3767,7 @@
       }
     }
   ],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions',
   value: Array [
@@ -3836,11 +3836,11 @@
       children: Object {}
     }
   ]
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/withrepeat/draft.svc/$metadata#Submissions"
          "value": [
            {
@@ -3861,15 +3861,15 @@
 
       AssertionError: expected Object {
   value: Array [],
-  '@odata.context': 'https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions'
+  '@odata.context': 'https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions'
 } to equal Object {
   '@odata.context': 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions',
   value: Array []
-} (at '@odata.context', A has 'https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions')
+} (at '@odata.context', A has 'https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions' and B has 'http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions')
       + expected - actual
 
        {
-      -  "@odata.context": "https://central-dev/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
+      -  "@odata.context": "https://central.local/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
       +  "@odata.context": "http://localhost:8989/v1/projects/1/forms/doubleRepeat/draft.svc/$metadata#Submissions"
          "value": []
        }
@@ -5250,10 +5250,10 @@
        /:instanceId/edit GET
          should pass the appropriate parameters to the enketo module:
 
-      AssertionError: expected 'https://central-dev/v1/projects/1' to be 'http://localhost:8989/v1/projects/1'
+      AssertionError: expected 'https://central.local/v1/projects/1' to be 'http://localhost:8989/v1/projects/1'
       + expected - actual
 
-      -https://central-dev/v1/projects/1
+      -https://central.local/v1/projects/1
       +http://localhost:8989/v1/projects/1
       
       at Assertion.fail (node_modules/should/cjs/should.js:275:17)
