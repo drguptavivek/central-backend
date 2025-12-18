@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS vg_field_key_auth (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_field_key_auth_username ON vg_field_key_auth (vg_username);
 CREATE INDEX IF NOT EXISTS idx_vg_field_key_auth_active ON vg_field_key_auth (vg_active);
+-- Ensure one row per actorId to avoid DataIntegrityError on maybeOne lookups.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_field_key_auth_actorId ON vg_field_key_auth ("actorId");
 
 -- vg settings key/value.
 CREATE TABLE IF NOT EXISTS vg_settings (
