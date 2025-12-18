@@ -9,7 +9,7 @@
       "maximumPoolSize": 10
     },
     "email": {
-      "serviceAccount": "no-reply@central-dev",
+      "serviceAccount": "no-reply@central.local",
       "transport": "smtp",
       "transportOpts": {
         "host": "mail",
@@ -32,7 +32,7 @@
       "apiKey": "cRliFU6qVD0NyXaVd52BkdFdS7kvGcvWgBnM0IFBkksmzawz7HGPwghcJN5AADQq6oBeGFfgqE0q92kxBTAX5ZaQw9HtFYTWtKFHmAMuBp419BtxPjA9sYaXENhOdqUV"
     },
     "env": {
-      "domain": "https://central-dev",
+      "domain": "https://central.local",
       "sysadminAccount": "administrator@email.com"
     },
     "oidc": {
