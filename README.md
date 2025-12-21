@@ -17,7 +17,7 @@ This repository is a fork of `getodk/central-backend` used for VG-specific app u
 Key customizations:
 
 - App user auth endpoints with short-lived bearer tokens (no long-lived tokens in list/create responses).
-- App user session TTL and session cap stored in `vg_settings`.
+- App user session TTL and session cap stored in `vg_settings` (defaults: 3 days, cap 3).
 - Login attempt tracking with rate limiting and lockouts.
 - App user activation/revocation and password reset/change flows.
 - VG-specific tables and settings prefixed with `vg_*`.
