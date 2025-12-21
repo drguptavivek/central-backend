@@ -146,5 +146,29 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 - Listings never expose active short tokens; frontends must explicitly call `/login` to obtain one for submissions.
 
 ## Configuration
-- Session TTL is driven by the DB setting `vg_app_user_session_ttl_days` stored in `vg_settings`; default seed is `3` days (see migration `plan/sql/vg_app_user_auth.sql`). If the setting is absent, the backend falls back to 3 days.
+- Session TTL is driven by the DB setting `vg_app_user_session_ttl_days` stored in `vg_settings`; default seed is `3` days (see migration `docs/sql/vg_app_user_auth.sql`). If the setting is absent, the backend falls back to 3 days.
 - Session cap is driven by DB setting `vg_app_user_session_cap` in `vg_settings`; default seed is `3` active sessions per app user. Each login trims older sessions beyond the cap.
+
+## System settings (admin)
+
+### Get session settings
+**GET /system/settings**
+
+- Auth: Requires `config.read` permission.
+- Response — HTTP 200, application/json:
+  ```json
+  { "vg_app_user_session_ttl_days": 3, "vg_app_user_session_cap": 3 }
+  ```
+
+### Update session settings
+**PUT /system/settings**
+
+- Auth: Requires `config.set` permission.
+- Request (JSON): provide either or both.
+  ```json
+  { "vg_app_user_session_ttl_days": 5, "vg_app_user_session_cap": 2 }
+  ```
+- Response — HTTP 200, application/json:
+  ```json
+  { "success": true }
+  ```

@@ -24,8 +24,14 @@ Key customizations:
 
 See:
 
+- [`docs/vg_overview.md`](docs/vg_overview.md) for overall scope and behavior changes.
+- [`docs/vg_user_behavior.md`](docs/vg_user_behavior.md) for user-facing behavior and roles.
+- [`docs/vg_settings.md`](docs/vg_settings.md) for TTL/cap configuration.
+- [`docs/vg_implementation.md`](docs/vg_implementation.md) for implementation details and modified core behavior.
+- [`docs/vg_installation.md`](docs/vg_installation.md) for VG setup steps.
 - [`docs/vg_api.md`](docs/vg_api.md) for API behavior details.
 - [`docs/vg_core_server_edits.md`](docs/vg_core_server_edits.md) for any edits to upstream core files.
+- [`docs/vg_tests.md`](docs/vg_tests.md) for VG test coverage and status.
 
 ## Contributing
 

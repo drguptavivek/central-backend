@@ -1,9 +1,15 @@
-# CI checklist for vg app-user login + short tokens
+# Archived: CI checklist for vg app-user login + short tokens
+
+This document is archived. Ongoing guidance now lives in:
+
+- `server/docs/vg_overview.md`
+- `server/docs/vg_implementation.md`
+- `server/docs/vg_tests.md`
 
 Purpose: track implementation steps for the vg_* app-user login, password policy, and short-lived session work so it remains mergeable against upstream.
 
 ## Migration and schema
-- [x] Apply SQL migration at plan/sql/vg_app_user_auth.sql (creates vg_field_key_auth, vg_settings seeded with vg_app_user_session_ttl_days=3, vg_app_user_login_attempts).
+- [x] Apply SQL migration at docs/sql/vg_app_user_auth.sql (creates vg_field_key_auth, vg_settings seeded with vg_app_user_session_ttl_days=3, vg_app_user_login_attempts).
 
 ## Model/query layer
 - [x] Add vg_field_key_auth frame/query (actorId FK/PK) and helpers (create with password, set password, set active, get by vg_username).
@@ -31,7 +37,7 @@ Purpose: track implementation steps for the vg_* app-user login, password policy
 ## Deployment/configuration
 - [x] Document new config key vg_app_user_session_ttl_days and defaults.
 - [x] Document new config key vg_app_user_session_cap (default 3) and seed in vg_settings.
-- [ ] Document schema changes and rollout order (migrate before deploy). Reference plan/sql/vg_app_user_auth.sql for the migration.
+- [ ] Document schema changes and rollout order (migrate before deploy). Reference docs/sql/vg_app_user_auth.sql for the migration.
 
 ## Post-deploy verification
 - [ ] Verify new app-user creation, login, and token issuance with 3-day expiry.
