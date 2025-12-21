@@ -49,6 +49,14 @@ This document describes all user-visible behavior changes introduced by VG app-u
 - Admins (web UI) can revoke all sessions for an app user; app users can revoke only the current session.
 - Admins can view active sessions with IP/device/comment metadata.
 
+## Telemetry
+
+- App users can send device telemetry (deviceId, Collect version, device timestamp, and full location params).
+- Telemetry records store both device generation time (`deviceDateTime`) and server receive time (`dateTime`).
+- Only app users can submit telemetry; web users cannot submit on their behalf.
+- System admins can review telemetry with filters by projectId, appUserId, deviceId, and date range.
+- Telemetry records are retained indefinitely (no TTL cleanup).
+
 ## App user fields
 
 - App users now include `username` and optional `phone`.

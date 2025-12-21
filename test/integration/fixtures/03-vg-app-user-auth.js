@@ -62,4 +62,25 @@ module.exports = async ({ run }) => {
     )
   `);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC)`);
+
+  await run(sql`
+    CREATE TABLE IF NOT EXISTS vg_app_user_telemetry (
+      id bigserial PRIMARY KEY,
+      "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+      device_id text NOT NULL,
+      collect_version text NOT NULL,
+      device_date_time timestamptz NOT NULL,
+      received_at timestamptz NOT NULL DEFAULT now(),
+      location_lat double precision NULL,
+      location_lng double precision NULL,
+      location_altitude double precision NULL,
+      location_accuracy double precision NULL,
+      location_speed double precision NULL,
+      location_bearing double precision NULL,
+      location_provider text NULL
+    )
+  `);
+  await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_received ON vg_app_user_telemetry ("actorId", received_at DESC)`);
+  await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_device_received ON vg_app_user_telemetry (device_id, received_at DESC)`);
+  await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_telemetry (received_at DESC)`);
 };

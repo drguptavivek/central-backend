@@ -8,12 +8,16 @@ This document lists the key implementation points and modified core behavior.
 - `vg_settings`: Stores session TTL and cap values.
 - `vg_app_user_login_attempts`: Stores login attempts for lockout enforcement.
 - `vg_app_user_sessions`: Stores IP/device metadata (user agent, deviceId, comments) per active session (token FK to `sessions`).
+- `vg_app_user_telemetry`: Stores app-user device telemetry (deviceId, Collect version, device timestamps, location).
 
 ## Core modules
 
 - `server/lib/domain/vg-app-user-auth.js`: Orchestrates login, password change/reset, revoke, and activate/deactivate; emits vg audit events.
+- `server/lib/domain/vg-telemetry.js`: Validates and records app-user telemetry payloads.
 - `server/lib/model/query/vg-app-user-auth.js`: Data access for VG auth, settings lookup, and login attempt tracking.
+- `server/lib/model/query/vg-telemetry.js`: Data access for telemetry insert and filtered listing.
 - `server/lib/resources/vg-app-user-auth.js`: Exposes system settings endpoints for TTL and cap.
+- `server/lib/resources/vg-telemetry.js`: Exposes app-user telemetry capture and admin listing endpoints.
 
 ## File-by-file details
 
@@ -30,8 +34,16 @@ This document lists the key implementation points and modified core behavior.
   - `insertAuth()`, `updatePassword()`, `updatePhone()`, `setActive()`: CRUD for `vg_field_key_auth`.
   - `recordAttempt()` / `getLockStatus()`: login attempt tracking and lockout checks.
   - `recordSession()` / `getActiveSessionsByActorId()`: session metadata tracking and listing.
+- `server/lib/domain/vg-telemetry.js`
+  - `recordTelemetry()`: validates telemetry payload and inserts record for the authenticated app user.
+- `server/lib/model/query/vg-telemetry.js`
+  - `insertTelemetry()`: writes telemetry fields to `vg_app_user_telemetry`.
+  - `getTelemetry()`: lists telemetry with filters (projectId, deviceId, appUserId, dateFrom/dateTo) and pagination.
 - `server/lib/resources/vg-app-user-auth.js`
   - Maps HTTP routes to the domain functions and enforces auth/permission checks.
+- `server/lib/resources/vg-telemetry.js`
+  - `POST /projects/:projectId/app-users/telemetry`: app-user telemetry capture.
+  - `GET /system/app-users/telemetry`: system-admin telemetry listing with filters and pagination.
 - `server/lib/model/query/sessions.js`
   - Rejects sessions for deactivated app users (`vg_active=false`).
 - `server/lib/model/query/field-keys.js`
@@ -46,6 +58,8 @@ This document lists the key implementation points and modified core behavior.
 - `POST /projects/:projectId/app-users/:id/revoke-admin` -> `vgAppUserAuth.setActive(false)`
 - `GET /projects/:projectId/app-users/:id/sessions` -> `vgAppUserAuth.listSessions()`
 - `POST /projects/:projectId/app-users/:id/active` -> `vgAppUserAuth.setActive(active)`
+- `POST /projects/:projectId/app-users/telemetry` -> `vgTelemetry.recordTelemetry()`
+- `GET /system/app-users/telemetry` -> `VgTelemetry.getTelemetry()`
 - `GET /system/settings` -> `VgAppUserAuth.getSessionTtlDays()` + `getSessionCap()`
 - `PUT /system/settings` -> `VgAppUserAuth.upsertSetting()`
 
@@ -65,7 +79,7 @@ VG emits vg-prefixed actions for creation, login success/failure, password chang
 
 ## Migrations
 
-- `server/docs/sql/vg_app_user_auth.sql`: Creates VG tables and seeds defaults (TTL 3, cap 3).
+- `server/docs/sql/vg_app_user_auth.sql`: Creates VG tables (including telemetry) and seeds defaults (TTL 3, cap 3).
 
 ## Rate limiting and lockouts
 
@@ -76,6 +90,21 @@ VG emits vg-prefixed actions for creation, login success/failure, password chang
 
 Apply the schema migration in a local Docker setup:
 
-```sh
-docker exec -i central-postgres14-1 psql -U odk -d odk < docs/sql/vg_app_user_auth.sql
+```bash
+docker exec -i central-postgres14-1 psql -U odk -d odk < server/docs/sql/vg_app_user_auth.sql
+
+
+# TESTS
+# - The test suite runs core migrations (server/lib/model/migrations) on the test DB in server/   test/integration/setup.js.
+ # - Then it runs fixtures, including server/test/integration/fixtures/03-vg-app-user-auth.js,  which creates the VG tables (vg_field_key_auth, vg_settings, vg_app_user_login_attempts,    vg_app_user_sessions, vg_app_user_telemetry) for the test DB.
+#  So the test DB is populated via fixtures, not server/docs/sql/vg_app_user_auth.sql. That SQL file is for manual setup/upgrade outside the test harness.
+
+docker exec -i central-postgres14-1 psql -U odk -c "DROP DATABASE IF EXISTS odk_integration_test;"
+docker exec -i central-postgres14-1 psql -U odk -c "CREATE DATABASE odk_integration_test;"
+docker exec -i central-postgres14-1 psql -U odk -d odk_integration_test -c "CREATE SCHEMA IF  NOT EXISTS public; ALTER SCHEMA public OWNER TO odk; GRANT USAGE, CREATE ON SCHEMA public TO odk_test_user;"
+docker exec -i central-postgres14-1 psql -U odk -c "ALTER ROLE odk_test_user SET search_path =public;"
+docker exec -i central-postgres14-1 psql -U odk -c "ALTER DATABASE odk_integration_test SET  search_path = public;"
+
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.dev.yml --profile central exec service sh -lc 'PGPASSWORD=odk_test_pw psql -h postgres14 -U  odk_test_user -d odk_integration_test -c "SHOW search_path;"'
+
 ```

@@ -334,3 +334,43 @@ in `getodk/central-backend`. Use it to keep rebases manageable.
    
        valueOutOfRangeForType: problem(400.22, ({ value, type }) => `Provided value '${value}' is out of range for type '${type}'`),
   ```
+
+- Date: 2025-12-21
+  File: lib/http/service.js
+  Change summary: Registered vg telemetry resource routes.
+  Reason: Expose app-user telemetry endpoints.
+  Risk/notes: Low; routing only.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/http/service.js b/lib/http/service.js
+  index c83c8a80..e350a390 100644
+  --- a/lib/http/service.js
+  +++ b/lib/http/service.js
+  @@ -98,6 +98,7 @@ module.exports = (container) => {
+     require('../resources/users')(service, endpoint, anonymousEndpoint);
+     require('../resources/sessions')(service, endpoint, anonymousEndpoint);
+     require('../resources/vg-app-user-auth')(service, endpoint, anonymousEndpoint);
+  +  require('../resources/vg-telemetry')(service, endpoint);
+     require('../resources/geo-extracts')(service, endpoint);
+  ```
+
+- Date: 2025-12-21
+  File: lib/model/container.js
+  Change summary: Registered VgTelemetry query module.
+  Reason: Provide DB access for app-user telemetry.
+  Risk/notes: Low.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/container.js b/lib/model/container.js
+  index 04055d75..c2a52b62 100644
+  --- a/lib/model/container.js
+  +++ b/lib/model/container.js
+  @@ -114,6 +114,7 @@ const withDefaults = (base, queries) => {
+       UserPreferences: require('./query/user-preferences'),
+       GeoExtracts: require('./query/geo-extracts'),
+       VgAppUserAuth: require('./query/vg-app-user-auth'),
+  +    VgTelemetry: require('./query/vg-telemetry'),
+     };
+  ```

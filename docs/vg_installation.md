@@ -17,13 +17,15 @@ docker exec -i central-postgres14-1 psql -U odk -d odk < docs/sql/vg_app_user_au
 ```
 
 If you're upgrading an existing VG install, re-run the same SQL to add new columns
-(`device_id`, `comments`) and the `vg_settings` constraint.
+(`device_id`, `comments`), the telemetry table, and the `vg_settings` constraint.
 
 This creates:
 
 - `vg_field_key_auth`
 - `vg_settings` (seeds TTL 3 days, cap 3)
 - `vg_app_user_login_attempts`
+- `vg_app_user_sessions`
+- `vg_app_user_telemetry`
 
 ## Step 2: Verify settings (optional)
 
@@ -47,6 +49,10 @@ docker exec -i central-postgres14-1 psql -U odk -d odk -c "select count(*) from 
 
 ```sh
 docker exec -i central-postgres14-1 psql -U odk -d odk -c "select count(*) from vg_app_user_login_attempts;"
+```
+
+```sh
+docker exec -i central-postgres14-1 psql -U odk -d odk -c "select count(*) from vg_app_user_telemetry;"
 ```
 
 ## Step 3: Start the server
@@ -108,6 +114,10 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 
 ```sh
 docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.dev.yml --profile central exec service sh -lc 'cd /usr/odk && NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js'
+```
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.dev.yml --profile central exec service sh -lc 'cd /usr/odk && NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-telemetry.js'
 ```
 
 ## Notes
