@@ -71,6 +71,26 @@ ALTER TABLE IF EXISTS vg_app_user_sessions
   ADD COLUMN IF NOT EXISTS comments text;
 CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC);
 
+-- App-user telemetry data (device metadata, location, timestamps).
+CREATE TABLE IF NOT EXISTS vg_app_user_telemetry (
+  id bigserial PRIMARY KEY,
+  "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+  device_id text NOT NULL,
+  collect_version text NOT NULL,
+  device_date_time timestamptz NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now(),
+  location_lat double precision NULL,
+  location_lng double precision NULL,
+  location_altitude double precision NULL,
+  location_accuracy double precision NULL,
+  location_speed double precision NULL,
+  location_bearing double precision NULL,
+  location_provider text NULL
+);
+CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_received ON vg_app_user_telemetry ("actorId", received_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_device_received ON vg_app_user_telemetry (device_id, received_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_telemetry (received_at DESC);
+
 -- Ensure admin/manager roles can update app users (displayName/phone).
 UPDATE roles
 SET verbs = coalesce(verbs, '[]'::jsonb) || '["field_key.update"]'::jsonb

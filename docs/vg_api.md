@@ -137,6 +137,64 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   ]
   ```
 
+### Submit telemetry (app user)
+**POST /projects/:projectId/app-users/telemetry**
+
+- Auth: App user bearer token (Collect).
+- Request (JSON): `deviceId`, `collectVersion`, and `deviceDateTime` are required. `deviceDateTime` must be a UTC ISO string (`Z` or `+00:00`). `location` is required and must include `latitude` and `longitude` (other fields optional).
+- App users only; web users cannot submit telemetry on their behalf.
+  ```json
+  {
+    "deviceId": "device-123",
+    "collectVersion": "Collect/2025.1",
+    "deviceDateTime": "2025-12-21T10:00:00.000Z",
+    "location": {
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "altitude": 10.5,
+      "accuracy": 3.2,
+      "speed": 0.5,
+      "bearing": 42.1,
+      "provider": "gps"
+    }
+  }
+  ```
+- Response — HTTP 200, application/json:
+  ```json
+  { "id": 55, "dateTime": "2025-12-21T10:02:00.000Z" }
+  ```
+  `deviceDateTime` is device-generated; `dateTime` is the server receive time.
+
+### List telemetry (system admin)
+**GET /system/app-users/telemetry**
+
+- Auth: Requires `config.read` permission.
+- Query params (all optional): `projectId`, `deviceId`, `appUserId`, `dateFrom`, `dateTo`, `limit`, `offset`.
+- `dateFrom`/`dateTo` filter by server receive time (`dateTime`).
+- Response — HTTP 200, application/json:
+  ```json
+  [
+    {
+      "id": 55,
+      "appUserId": 12,
+      "projectId": 1,
+      "deviceId": "device-123",
+      "collectVersion": "Collect/2025.1",
+      "deviceDateTime": "2025-12-21T10:00:00.000Z",
+      "dateTime": "2025-12-21T10:02:00.000Z",
+      "location": {
+        "latitude": 37.7749,
+        "longitude": -122.4194,
+        "altitude": 10.5,
+        "accuracy": 3.2,
+        "speed": 0.5,
+        "bearing": 42.1,
+        "provider": "gps"
+      }
+    }
+  ]
+  ```
+
 ### Activate/deactivate
 **POST /projects/:projectId/app-users/:id/active**
 
