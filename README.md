@@ -10,6 +10,23 @@ This repository contains only the code for the backend API server: [Central Fron
 
 > **The `master` branch of this repository reflects ongoing development for the next version of ODK Central.** It may or may not be in sync with the `master` branch of the `central-frontend` repository. For the latest stable version, see the [release tags](https://github.com/getodk/central-backend/releases).
 
+## Fork notes (vg-work)
+
+This repository is a fork of `getodk/central-backend` used for VG-specific app user authentication and session control features. Customizations are kept modular to make rebasing onto upstream `master` easier.
+
+Key customizations:
+
+- App user auth endpoints with short-lived bearer tokens (no long-lived tokens in list/create responses).
+- App user session TTL and session cap stored in `vg_settings`.
+- Login attempt tracking with rate limiting and lockouts.
+- App user activation/revocation and password reset/change flows.
+- VG-specific tables and settings prefixed with `vg_*`.
+
+See:
+
+- [`docs/vg_api.md`](docs/vg_api.md) for API behavior details.
+- [`docs/vg_core_server_edits.md`](docs/vg_core_server_edits.md) for any edits to upstream core files.
+
 ## Contributing
 
 We need your help to make this project as useful as possible! Please see the [Contribution Guide](https://github.com/getodk/central-backend/blob/master/CONTRIBUTING.md) for detailed information on discussion forums, project policies, code guidelines, and an overview of the software architecture.
@@ -106,4 +123,3 @@ Various other commands are available:
 Please see the [Contribution Guide](https://github.com/getodk/central-backend/blob/master/CONTRIBUTING.md) for complete information on our coding style.
 
 In general, follow the existing conventions in the project. We use linting as _a part of_ coding style verification. To run the linter, run `make lint` from the repository root. We use [rules](.eslintrc.json) based on the [Airbnb JavaScript style guide](https://github.com/airbnb/javascript). The linter is not perfect; we will make exceptions when we have a consensus to do so.
-
