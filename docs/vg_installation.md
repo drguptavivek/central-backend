@@ -10,11 +10,14 @@ This document lists the steps to set up VG-specific server changes for app-user 
 
 ## Step 1: Apply VG schema migration
 
-Run the VG SQL migration to create the new tables and seed defaults:
+Run the VG SQL migration to create the new tables/columns and seed defaults:
 
 ```sh
 docker exec -i central-postgres14-1 psql -U odk -d odk < docs/sql/vg_app_user_auth.sql
 ```
+
+If you're upgrading an existing VG install, re-run the same SQL to add new columns
+(`device_id`, `comments`) and the `vg_settings` constraint.
 
 This creates:
 
@@ -112,3 +115,9 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 - App users do not log in to the Central web UI.
 - Tokens are bearer-only and expire based on TTL.
 - Older sessions are revoked on login when the cap is exceeded.
+- Login lockouts are stored in `vg_app_user_login_attempts`. To clear a lockout for a user+IP:
+  ```sh
+  docker exec -i central-postgres14-1 psql -U odk -d odk -c "delete from vg_app_user_login_attempts where username='vguser' and ip='1.2.3.4' and succeeded=false;"
+  ```
+- Admin alternative: `POST /system/app-users/lockouts/clear` with `{ "username": "...", "ip": "..." }`.
+- Session listing: `GET /projects/:projectId/app-users/:id/sessions` to view IP/user-agent/deviceId/comments metadata for active sessions.

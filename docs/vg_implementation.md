@@ -7,6 +7,7 @@ This document lists the key implementation points and modified core behavior.
 - `vg_field_key_auth`: One-to-one with `field_keys` by `actorId`. Stores username, password hash, phone, and active flag.
 - `vg_settings`: Stores session TTL and cap values.
 - `vg_app_user_login_attempts`: Stores login attempts for lockout enforcement.
+- `vg_app_user_sessions`: Stores IP/device metadata (user agent, deviceId, comments) per active session (token FK to `sessions`).
 
 ## Core modules
 
@@ -28,6 +29,7 @@ This document lists the key implementation points and modified core behavior.
   - `getSessionTtlDays()` / `getSessionCap()`: read settings with defaults (3 days, cap 3).
   - `insertAuth()`, `updatePassword()`, `updatePhone()`, `setActive()`: CRUD for `vg_field_key_auth`.
   - `recordAttempt()` / `getLockStatus()`: login attempt tracking and lockout checks.
+  - `recordSession()` / `getActiveSessionsByActorId()`: session metadata tracking and listing.
 - `server/lib/resources/vg-app-user-auth.js`
   - Maps HTTP routes to the domain functions and enforces auth/permission checks.
 - `server/lib/model/query/sessions.js`
@@ -42,6 +44,7 @@ This document lists the key implementation points and modified core behavior.
 - `POST /projects/:projectId/app-users/:id/password/reset` -> `vgAppUserAuth.resetPassword()`
 - `POST /projects/:projectId/app-users/:id/revoke` -> `vgAppUserAuth.revokeSessions()` (self)
 - `POST /projects/:projectId/app-users/:id/revoke-admin` -> `vgAppUserAuth.setActive(false)`
+- `GET /projects/:projectId/app-users/:id/sessions` -> `vgAppUserAuth.listSessions()`
 - `POST /projects/:projectId/app-users/:id/active` -> `vgAppUserAuth.setActive(active)`
 - `GET /system/settings` -> `VgAppUserAuth.getSessionTtlDays()` + `getSessionCap()`
 - `PUT /system/settings` -> `VgAppUserAuth.upsertSetting()`

@@ -73,6 +73,64 @@ describe('api: vg app-user auth', () => {
     successes.should.equal(0);
   }));
 
+  it('should allow admins to clear a login lockout', testService(async (service) => {
+    const username = 'vguser-lockout-clear';
+    await createAppUser(service, { username });
+
+    for (let i = 0; i < 5; i += 1) {
+      await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: 'WrongPass!1' })
+        .expect(401);
+    }
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/system/app-users/lockouts/clear')
+        .send({ username })
+        .expect(200));
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200);
+  }));
+
+  it('should list active app-user sessions with IP, user agent, deviceId, and comments', testService(async (service) => {
+    const username = 'vguser-session-list';
+    const appUser = await createAppUser(service, { username });
+
+    await service.post('/v1/projects/1/app-users/login')
+      .set('User-Agent', 'Collect/1.0')
+      .send({ username, password: STRONG_PASSWORD, deviceId: 'device-1', comments: 'first device' })
+      .expect(200);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .set('User-Agent', 'Collect/2.0')
+      .send({ username, password: STRONG_PASSWORD, deviceId: 'device-2', comments: 'second device' })
+      .expect(200);
+
+    const sessions = await service.login('alice', (asAlice) =>
+      asAlice.get(`/v1/projects/1/app-users/${appUser.id}/sessions`)
+        .expect(200)
+        .then(({ body }) => body));
+
+    sessions.should.be.an.Array();
+    sessions.length.should.equal(2);
+    sessions.map((s) => s.userAgent).should.containEql('Collect/1.0');
+    sessions.map((s) => s.userAgent).should.containEql('Collect/2.0');
+    sessions.map((s) => s.deviceId).should.containEql('device-1');
+    sessions.map((s) => s.deviceId).should.containEql('device-2');
+    sessions.map((s) => s.comments).should.containEql('first device');
+    sessions.map((s) => s.comments).should.containEql('second device');
+    sessions.forEach((s) => {
+      should.exist(s.createdAt);
+      should.exist(s.expiresAt);
+      should.exist(s.ip);
+    });
+  }));
+
   it('should cap active sessions at three per app user', testService(async (service, container) => {
     const username = 'vguser-cap';
     const appUser = await createAppUser(service, { username });
@@ -468,5 +526,104 @@ describe('api: vg app-user auth', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ old: 'irrelevant', new: 'NewAdminPass!1' })
       .expect(403);
+  }));
+
+  it('should revoke only the current session on self-revoke', testService(async (service) => {
+    const username = 'vguser-self-revoke';
+    const appUser = await createAppUser(service, { username });
+
+    const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { token: tokenB } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(200);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(401);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .expect(200);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .expect(401);
+  }));
+
+  it('should allow admin revoke to invalidate all sessions', testService(async (service) => {
+    const username = 'vguser-admin-revoke-all';
+    const appUser = await createAppUser(service, { username });
+
+    const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { token: tokenB } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`)
+        .expect(200));
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(401);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .expect(401);
+  }));
+
+  it('should reject login for a username that belongs to a different project', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'project-login-scope' }).expect(200).then(({ body }) => body);
+    await asAlice.post(`/v1/projects/${project2}/app-users`)
+      .send({ username: 'vguser-project-scope', password: STRONG_PASSWORD, fullName: 'Project Scope' })
+      .expect(200);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-project-scope', password: STRONG_PASSWORD })
+      .expect(401);
+  }));
+
+  it('should reject admin reset if vg auth record is missing', testService(async (service, container) => {
+    const appUser = await createAppUser(service, { username: 'vguser-missing-auth' });
+
+    await container.run(sql`delete from vg_field_key_auth where "actorId"=${appUser.id}`);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: STRONG_PASSWORD })
+        .expect(404));
+  }));
+
+  it('should validate session settings updates', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    const cases = [
+      { vg_app_user_session_ttl_days: 0 },
+      { vg_app_user_session_ttl_days: -1 },
+      { vg_app_user_session_ttl_days: 'abc' },
+      { vg_app_user_session_cap: 0 },
+      { vg_app_user_session_cap: -2 },
+      { vg_app_user_session_cap: 'nope' }
+    ];
+
+    for (const body of cases) {
+      await asAlice.put('/v1/system/settings')
+        .send(body)
+        .expect(400);
+    }
   }));
 });

@@ -16,6 +16,7 @@ This document describes all user-visible behavior changes introduced by VG app-u
 - Tokens expire at `expiresAt` (no sliding refresh) and must be used in `Authorization: Bearer <token>`.
 - Tokens are bearer-only; cookies are ignored for these routes.
 - App users are project-scoped; login returns `projectId` for the linked field key.
+- App user login requests include `deviceId` and optional `comments` to identify the device/session.
 
 ## App user creation and updates
 
@@ -37,12 +38,16 @@ This document describes all user-visible behavior changes introduced by VG app-u
 
 - 5 failed attempts in 5 minutes per username+IP triggers a 10-minute lock.
 - Attempts are tracked server-side for lockout enforcement.
+- Lockouts are recorded in `vg_app_user_login_attempts`.
+- To clear a lockout, delete recent failed attempts for the username+IP or backdate them beyond the lock window.
+- Admins can clear lockouts via `POST /system/app-users/lockouts/clear`.
 
 ## Activation and revocation
 
 - Deactivating an app user immediately revokes existing sessions.
 - Deactivated users cannot authenticate until reactivated.
-- Admins can revoke all sessions for an app user; app users can revoke their own sessions.
+- Admins (web UI) can revoke all sessions for an app user; app users can revoke only the current session.
+- Admins can view active sessions with IP/device/comment metadata.
 
 ## App user fields
 

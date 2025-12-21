@@ -24,6 +24,7 @@ Defaults are seeded by `server/docs/sql/vg_app_user_auth.sql`.
 
 - Values are stored as strings but parsed as numbers server-side.
 - Use positive integers for both TTL (days) and cap (sessions).
+- DB constraint enforces positive integer values for these keys.
 
 ## Access control
 

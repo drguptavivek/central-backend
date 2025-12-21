@@ -217,6 +217,26 @@ in `getodk/central-backend`. Use it to keep rebases manageable.
   +module.exports = { create, getByBearerToken, terminateByActorId, trimByActorId, terminate, reap };
   ```
 
+- Date: 2025-12-30
+  File: lib/model/query/sessions.js
+  Change summary: Require vg_field_key_auth presence to authenticate field_key sessions.
+  Reason: Block legacy long-lived field-key tokens without VG auth records.
+  Risk/notes: High; app-user authentication behavior.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/query/sessions.js b/lib/model/query/sessions.js
+  index 0275bb09..5e8a7d2f 100644
+  --- a/lib/model/query/sessions.js
+  +++ b/lib/model/query/sessions.js
+  @@ -44,7 +44,7 @@ const getByBearerToken = (token) => ({ maybeOne }) => (isValidToken(token) ? maybeOne(sql`
+   select ${_unjoiner.fields} from sessions
+   join actors on actors.id=sessions."actorId"
+   left join vg_field_key_auth on vg_field_key_auth."actorId"=sessions."actorId"
+   where token=${token} and sessions."expiresAt" > now()
+  -  and (actors.type <> 'field_key' or coalesce(vg_field_key_auth.vg_active, true) = true)`)
+  +  and (actors.type <> 'field_key' or (vg_field_key_auth."actorId" is not null and vg_field_key_auth.vg_active = true))`)
+  ```
 - Date: 2025-12-21
   File: lib/resources/app-users.js
   Change summary: App user API updated to support new fields and behavior.
@@ -314,4 +334,3 @@ in `getodk/central-backend`. Use it to keep rebases manageable.
    
        valueOutOfRangeForType: problem(400.22, ({ value, type }) => `Provided value '${value}' is out of range for type '${type}'`),
   ```
-
