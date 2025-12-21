@@ -1,3 +1,13 @@
+# Archived: App-user login plan
+
+This document is archived. Core behavior and implementation details are consolidated into:
+
+- `server/docs/vg_overview.md`
+- `server/docs/vg_user_behavior.md`
+- `server/docs/vg_settings.md`
+- `server/docs/vg_implementation.md`
+- `server/docs/vg_api.md`
+
 # Concrete backend plan for app-user login + short-lived tokens (new server, no legacy path)
 
   1. Schema
@@ -12,7 +22,7 @@
   - New table vg_settings (id serial, vg_key_name text, vg_key_value text) to store vg_app_user_session_ttl_days (days or seconds) and future vg_* configs; seed row ('vg_app_user_session_ttl_days','3').
     - Also seed vg_app_user_session_cap default 3 to cap active app-user sessions.
   - New table vg_app_user_login_attempts for tracking login failures/successes; rows retained indefinitely.
-  - Migration: create new tables; no changes to field_keys columns; provided as separate SQL at plan/sql/vg_app_user_auth.sql to apply via psql.
+  - Migration: create new tables; no changes to field_keys columns; provided as separate SQL at docs/sql/vg_app_user_auth.sql to apply via psql.
 
   2. App User create/update API (/projects/:projectId/app-users)
 
