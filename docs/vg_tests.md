@@ -19,7 +19,7 @@ Note: the test suite uses the fixture `server/test/integration/fixtures/03-vg-ap
 | Submission denied for unassigned form | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | No assignment → 403 on submit | same as above |
 | Submission denied with expired/foreign/malformed tokens | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Covers expired token, token from another project, and malformed token cases | same as above |
 | Submission with old token after password change fails; new token works | `test/integration/api/vg-tests-orgAppUsers.js` | ✅ Pass | Old token 403, new token 200 post-change | same as above |
-| Telemetry capture + admin listing (filters, paging) | `test/integration/api/vg-telemetry.js` | Pending | App-user telemetry write and system admin listing with filters | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-telemetry.js` |
+| Telemetry capture + admin listing (filters, paging) | `test/integration/api/vg-telemetry.js` | ✅ Pass | App-user telemetry write and system admin listing with filters | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-telemetry.js` |
 | Unit: password policy accept | `test/unit/util/vg-password.js` | ✅ Pass | Valid password returns true | `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js` |
 | Unit: too short | `test/unit/util/vg-password.js` | ✅ Pass | Rejects short password | same as above |
 | Unit: missing special char | `test/unit/util/vg-password.js` | ✅ Pass | Rejects missing special | same |
@@ -31,3 +31,4 @@ Run in this session:
 - ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha --recursive test/integration/api/vg-app-user-auth.js`
 - ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/unit/util/vg-password.js`
 - ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-tests-orgAppUsers.js` (vg-only rewrite of legacy app-user routes)
+- ✅ `NODE_CONFIG_ENV=test BCRYPT=insecure npx mocha test/integration/api/vg-telemetry.js`
