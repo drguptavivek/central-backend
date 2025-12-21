@@ -18,8 +18,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_field_key_auth_actorId ON vg_field_key_
 CREATE TABLE IF NOT EXISTS vg_settings (
   id serial PRIMARY KEY,
   vg_key_name text NOT NULL UNIQUE,
-  vg_key_value text NOT NULL
+  vg_key_value text NOT NULL,
+  CONSTRAINT vg_settings_positive_int CHECK (
+    vg_key_name NOT IN ('vg_app_user_session_ttl_days', 'vg_app_user_session_cap')
+    OR vg_key_value ~ '^[1-9][0-9]*$'
+  )
 );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vg_settings_positive_int'
+  ) THEN
+    ALTER TABLE vg_settings
+      ADD CONSTRAINT vg_settings_positive_int CHECK (
+        vg_key_name NOT IN ('vg_app_user_session_ttl_days', 'vg_app_user_session_cap')
+        OR vg_key_value ~ '^[1-9][0-9]*$'
+      );
+  END IF;
+END$$;
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_app_user_session_ttl_days', '3')
   ON CONFLICT (vg_key_name) DO NOTHING;
@@ -37,6 +53,23 @@ CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
 );
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_user_createdat ON vg_app_user_login_attempts (username, "createdAt" DESC);
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_ip_createdat ON vg_app_user_login_attempts (ip, "createdAt" DESC);
+
+-- App-user session metadata (IP/device tracking).
+CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
+  id bigserial PRIMARY KEY,
+  token text NOT NULL UNIQUE REFERENCES sessions(token) ON DELETE CASCADE,
+  "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+  ip inet NULL,
+  user_agent text NULL,
+  device_id text NULL,
+  comments text NULL,
+  "createdAt" timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE IF EXISTS vg_app_user_sessions
+  ADD COLUMN IF NOT EXISTS device_id text;
+ALTER TABLE IF EXISTS vg_app_user_sessions
+  ADD COLUMN IF NOT EXISTS comments text;
+CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC);
 
 -- Ensure admin/manager roles can update app users (displayName/phone).
 UPDATE roles

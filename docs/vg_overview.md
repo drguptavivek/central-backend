@@ -15,6 +15,8 @@ Only app-user authentication and session behavior is changed; all other Central 
 - App user records now include username and phone; username is normalized to lowercase.
 - Deactivation immediately revokes sessions and blocks further authentication.
 - Login attempts are rate-limited (5 failures in 5 minutes per username+IP => 10-minute lock).
+- Legacy long-lived field-key sessions without a matching `vg_field_key_auth` row are rejected.
+- Session metadata (IP/user agent/deviceId/comments) is captured for admin viewing.
 
 ## Defaults
 

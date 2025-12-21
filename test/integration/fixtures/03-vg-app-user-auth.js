@@ -19,12 +19,21 @@ module.exports = async ({ run }) => {
     CREATE TABLE IF NOT EXISTS vg_settings (
       id serial PRIMARY KEY,
       vg_key_name text NOT NULL UNIQUE,
-      vg_key_value text NOT NULL
+      vg_key_value text NOT NULL,
+      CONSTRAINT vg_settings_positive_int CHECK (
+        vg_key_name NOT IN ('vg_app_user_session_ttl_days', 'vg_app_user_session_cap')
+        OR vg_key_value ~ '^[1-9][0-9]*$'
+      )
     )
   `);
   await run(sql`
     INSERT INTO vg_settings (vg_key_name, vg_key_value)
     VALUES ('vg_app_user_session_ttl_days', '3')
+    ON CONFLICT (vg_key_name) DO NOTHING
+  `);
+  await run(sql`
+    INSERT INTO vg_settings (vg_key_name, vg_key_value)
+    VALUES ('vg_app_user_session_cap', '3')
     ON CONFLICT (vg_key_name) DO NOTHING
   `);
 
@@ -39,4 +48,18 @@ module.exports = async ({ run }) => {
   `);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_user_createdat ON vg_app_user_login_attempts (username, "createdAt" DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_ip_createdat ON vg_app_user_login_attempts (ip, "createdAt" DESC)`);
+
+  await run(sql`
+    CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
+      id bigserial PRIMARY KEY,
+      token text NOT NULL UNIQUE REFERENCES sessions(token) ON DELETE CASCADE,
+      "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+      ip inet NULL,
+      user_agent text NULL,
+      device_id text NULL,
+      comments text NULL,
+      "createdAt" timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC)`);
 };

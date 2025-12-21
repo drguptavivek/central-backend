@@ -35,7 +35,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 - Auth: Anonymous.
 - Request (JSON):
   ```json
-  { "username": "collect-user", "password": "GoodPass!1X" }
+  { "username": "collect-user", "password": "GoodPass!1X", "deviceId": "device-123", "comments": "tablet-1" }
   ```
 - Response — HTTP 200, application/json:
   ```json
@@ -110,6 +110,8 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 **POST /projects/:projectId/app-users/:id/revoke**
 
 - Auth: App user bearer token (self). `id` is the app-user ID returned by `/login`.
+- Behavior: revokes only the current token.
+- Request (JSON): optional `deviceId` for audit/logging.
 - Response — HTTP 200, application/json:
   ```json
   { "success": true }
@@ -118,10 +120,21 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 ### Revoke sessions (admin)
 **POST /projects/:projectId/app-users/:id/revoke-admin**
 
-- Auth: Admin/manager on the project.
+- Auth: Admin/manager on the project (web UI).
 - Response — HTTP 200, application/json:
   ```json
   { "success": true }
+  ```
+
+### List app-user sessions (admin)
+**GET /projects/:projectId/app-users/:id/sessions**
+
+- Auth: Admin/manager on the project (web UI).
+- Response — HTTP 200, application/json:
+  ```json
+  [
+    { "id": 10, "createdAt": "2025-12-16T16:00:00.000Z", "expiresAt": "2025-12-19T16:00:00.000Z", "ip": "127.0.0.1", "userAgent": "Collect/1.0", "deviceId": "device-123", "comments": "tablet-1" }
+  ]
   ```
 
 ### Activate/deactivate
@@ -168,6 +181,22 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
   ```json
   { "vg_app_user_session_ttl_days": 5, "vg_app_user_session_cap": 2 }
   ```
+- Response — HTTP 200, application/json:
+  ```json
+  { "success": true }
+  ```
+
+## Lockouts (admin)
+
+### Clear lockout
+**POST /system/app-users/lockouts/clear**
+
+- Auth: Requires `config.set` permission.
+- Request (JSON):
+  ```json
+  { "username": "collect-user", "ip": "1.2.3.4" }
+  ```
+  `ip` is optional; if omitted, clears all recent failed attempts for the username.
 - Response — HTTP 200, application/json:
   ```json
   { "success": true }

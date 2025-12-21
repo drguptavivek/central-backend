@@ -4,6 +4,7 @@ const { testService, withClosedForm } = require('../setup');
 const { sql } = require('slonik');
 require('../assertions');
 const testData = require('../../data/xml');
+const { FieldKey } = require('../../../lib/model/frames');
 
 const STRONG_PASSWORD = 'GoodPass!1X';
 const uniqueUsername = () => `vg-legacy-${Math.random().toString(36).slice(2, 8)}`;
@@ -186,6 +187,24 @@ describe('vg org app-users (short token flow)', () => {
 
   it('rejects submissions with malformed/unknown tokens', testService(async (service) => {
     await service.post('/v1/key/not-a-token/projects/1/forms/simple/submissions')
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(401);
+  }));
+
+  it('rejects legacy long-lived app-user sessions without vg auth', testService(async (service, container) => {
+    const asAlice = await service.login('alice');
+    const { id: actorId } = await container.one(sql`select id from actors where "displayName"='Alice' limit 1`);
+    const project = await container.Projects.getById(1);
+
+    const fk = await container.FieldKeys.create(
+      FieldKey.fromApi({ displayName: 'legacy-app-user' }).with({ createdBy: actorId }),
+      project
+    );
+
+    await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${fk.actor.id}`).expect(200);
+
+    await service.post(`/v1/key/${fk.aux.session.token}/projects/1/forms/simple/submissions`)
       .send(testData.instances.simple.one)
       .set('Content-Type', 'application/xml')
       .expect(401);
