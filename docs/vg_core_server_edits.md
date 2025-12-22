@@ -374,3 +374,496 @@ in `getodk/central-backend`. Use it to keep rebases manageable.
   +    VgTelemetry: require('./query/vg-telemetry'),
      };
   ```
+
+- Date: 2025-12-22
+  File: lib/model/query/vg-telemetry.js
+  Change summary: Add total_count window field for telemetry pagination.
+  Reason: Provide total count for client pagination while keeping array response.
+  Risk/notes: Low; adds window aggregate to telemetry list query.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/query/vg-telemetry.js b/lib/model/query/vg-telemetry.js
+  index 6da94b2f..a9d3d1b2 100644
+  --- a/lib/model/query/vg-telemetry.js
+  +++ b/lib/model/query/vg-telemetry.js
+  @@ -50,6 +50,7 @@ const getTelemetry = (filters = {}, options = QueryOptions.none) => ({ all }) =>
+     all(sql`
+       SELECT
+  +      count(*) OVER () AS total_count,
+         t.id,
+         t."actorId" AS "appUserId",
+         fk."projectId",
+  ```
+
+- Date: 2025-12-22
+  File: lib/resources/vg-telemetry.js
+  Change summary: Emit X-Total-Count header for telemetry listings.
+  Reason: Support client-side pagination with total counts.
+  Risk/notes: Low; response header added, body unchanged.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/resources/vg-telemetry.js b/lib/resources/vg-telemetry.js
+  index 0afbb5a8..c1ff8bb4 100644
+  --- a/lib/resources/vg-telemetry.js
+  +++ b/lib/resources/vg-telemetry.js
+  @@ -62,7 +62,7 @@ module.exports = (service, endpoint) => {
+ 
+     // Admin telemetry listing with filters.
+     service.get('/system/app-users/telemetry', endpoint(
+  -    ({ VgTelemetry }, { auth, queryOptions }) =>
+  +    ({ VgTelemetry }, { auth, queryOptions }, __, response) =>
+         auth.canOrReject('config.read', Config.species)
+           .then(() => {
+             const options = queryOptions.allowArgs('projectId', 'deviceId', 'appUserId', 'dateFrom', 'dateTo');
+  @@ -80,7 +80,13 @@ module.exports = (service, endpoint) => {
+ 
+             return VgTelemetry.getTelemetry(filters, options);
+           })
+  -        .then((rows) => rows.map((row) => ({
+  +        .then((rows) => {
+  +          const total = rows.length !== 0 && Number.isFinite(Number(rows[0].total_count))
+  +            ? Number(rows[0].total_count)
+  +            : rows.length;
+  +          response.set('X-Total-Count', total);
+  +          return rows.map((row) => ({
+             id: row.id,
+             appUserId: row.appUserId,
+             projectId: row.projectId,
+  @@ -92,6 +98,7 @@ module.exports = (service, endpoint) => {
+             deviceDateTime: row.device_date_time,
+             dateTime: row.received_at,
+             location: mapLocation(row)
+  -        })))
+  +          }));
+  +        })
+     ));
+   };
+  ```
+
+- Date: 2025-12-22
+  File: lib/model/query/vg-app-user-auth.js
+  Change summary: Add paging and total_count support for app-user session listing.
+  Reason: Enable pagination for login history in the client.
+  Risk/notes: Low; adds window aggregate and paging to session list query.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/query/vg-app-user-auth.js b/lib/model/query/vg-app-user-auth.js
+  index 648adf3b..63ef3c77 100644
+  --- a/lib/model/query/vg-app-user-auth.js
+  +++ b/lib/model/query/vg-app-user-auth.js
+  @@ -1,6 +1,6 @@
+   // Namespaced vg app-user auth queries and helpers.
+   const { sql } = require('slonik');
+   const { Frame, readable, table, embedded, into } = require('../frame');
+   const { Actor } = require('../frames');
+  -const { unjoiner } = require('../../util/db');
+  +const { unjoiner, page, QueryOptions } = require('../../util/db');
+  @@ -92,8 +92,10 @@ const recordSession = ({ token, actorId, ip = null, userAgent = null, deviceId =
+           comments = EXCLUDED.comments
+   `);
+ 
+  -const getActiveSessionsByActorId = (actorId) => ({ all }) =>
+  +const getActiveSessionsByActorId = (actorId, options = QueryOptions.none) => ({ all }) =>
+     all(sql`
+       SELECT
+  +      count(*) OVER () AS total_count,
+         s.token,
+         s."createdAt",
+         s."expiresAt",
+  @@ -105,6 +107,7 @@ const getActiveSessionsByActorId = (actorId) => ({ all }) =>
+     FROM sessions s
+     JOIN vg_app_user_sessions v ON v.token = s.token
+     WHERE s."actorId"=${actorId}
+     ORDER BY s."createdAt" DESC
+  +  ${page(options)}
+   `);
+  ```
+
+- Date: 2025-12-22
+  File: lib/domain/vg-app-user-auth.js
+  Change summary: Pass paging options into app-user session listing.
+  Reason: Wire query options through to model layer for pagination.
+  Risk/notes: Low; method signature updated.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/domain/vg-app-user-auth.js b/lib/domain/vg-app-user-auth.js
+  index 1d5060bb..9d4bf1ed 100644
+  --- a/lib/domain/vg-app-user-auth.js
+  +++ b/lib/domain/vg-app-user-auth.js
+  @@ -216,9 +216,9 @@ const clearLockout = async (container, payload) => {
+     return true;
+   };
+ 
+  -const listSessions = async (container, actorId) => {
+  +const listSessions = async (container, actorId, options) => {
+     const { VgAppUserAuth } = container;
+  -  return VgAppUserAuth.getActiveSessionsByActorId(actorId);
+  +  return VgAppUserAuth.getActiveSessionsByActorId(actorId, options);
+   };
+  ```
+
+- Date: 2025-12-22
+  File: lib/resources/vg-app-user-auth.js
+  Change summary: Add X-Total-Count header and paging for app-user sessions.
+  Reason: Support login history pagination in the client.
+  Risk/notes: Low; response header added, body unchanged.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/resources/vg-app-user-auth.js b/lib/resources/vg-app-user-auth.js
+  index 7fb5f8fb..0f2c1c48 100644
+  --- a/lib/resources/vg-app-user-auth.js
+  +++ b/lib/resources/vg-app-user-auth.js
+  @@ -82,7 +82,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
+ 
+     // List active app-user sessions (admin/manager).
+     service.get('/projects/:projectId/app-users/:id/sessions', endpoint(
+  -    ({ Projects, FieldKeys, VgAppUserAuth }, { auth, params }) =>
+  +    ({ Projects, FieldKeys, VgAppUserAuth }, { auth, params, queryOptions }, __, response) =>
+         Projects.getById(params.projectId)
+           .then(getOrNotFound)
+           .then((project) => auth.canOrReject('field_key.list', project)
+             .then(() => FieldKeys.getByProjectAndActorId(project.id, params.id)))
+           .then(getOrNotFound)
+  -        .then((fk) => vgAuth.listSessions({ VgAppUserAuth }, fk.actor.id))
+  -        .then((sessions) => sessions.map((s) => ({
+  +        .then((fk) => vgAuth.listSessions({ VgAppUserAuth }, fk.actor.id, queryOptions))
+  +        .then((sessions) => {
+  +          const total = sessions.length !== 0 && Number.isFinite(Number(sessions[0].total_count))
+  +            ? Number(sessions[0].total_count)
+  +            : sessions.length;
+  +          response.set('X-Total-Count', total);
+  +          return sessions.map((s) => ({
+             id: s.id,
+             createdAt: s.createdAt,
+             expiresAt: s.expiresAt,
+             ip: s.ip,
+             userAgent: s.user_agent,
+             deviceId: s.device_id,
+             comments: s.comments
+  -        })))
+  +          }));
+  +        })
+     ));
+  ```
+
+- Date: 2025-12-22
+  File: lib/model/query/vg-app-user-auth.js
+  Change summary: Add project-scoped session listing with filters and paging.
+  Reason: Support project-level login history UI with user/date filters.
+  Risk/notes: Low; adds query and window aggregate.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/query/vg-app-user-auth.js b/lib/model/query/vg-app-user-auth.js
+  index 63ef3c77..52c9ce8b 100644
+  --- a/lib/model/query/vg-app-user-auth.js
+  +++ b/lib/model/query/vg-app-user-auth.js
+  @@ -108,6 +108,30 @@ const getActiveSessionsByActorId = (actorId, options = QueryOptions.none) => ({
+      ORDER BY s."createdAt" DESC
+      ${page(options)}
+    `);
+  +
+  +const projectSessionFilterer = (filters) => {
+  +  const conditions = [];
+  +  if (filters.projectId != null) conditions.push(sql`fk."projectId"=${filters.projectId}`);
+  +  if (filters.appUserId != null) conditions.push(sql`s."actorId"=${filters.appUserId}`);
+  +  if (filters.dateFrom != null) conditions.push(sql`s."createdAt" >= ${filters.dateFrom}`);
+  +  if (filters.dateTo != null) conditions.push(sql`s."createdAt" <= ${filters.dateTo}`);
+  +  return (conditions.length === 0) ? sql`true` : sql.join(conditions, sql` and `);
+  +};
+  +
+  +const getActiveSessionsByProject = (filters = {}, options = QueryOptions.none) => ({ all }) =>
+  +  all(sql`
+  +    SELECT
+  +      count(*) OVER () AS total_count,
+  +      s."actorId" AS "appUserId",
+  +      s."createdAt",
+  +      s."expiresAt",
+  +      v.id,
+  +      v.ip,
+  +      v.user_agent,
+  +      v.device_id,
+  +      v.comments
+  +    FROM sessions s
+  +    JOIN vg_app_user_sessions v ON v.token = s.token
+  +    JOIN field_keys fk ON fk."actorId" = s."actorId"
+  +    WHERE ${projectSessionFilterer(filters)}
+  +    ORDER BY s."createdAt" DESC
+  +    ${page(options)}
+  +  `);
+  ```
+
+- Date: 2025-12-22
+  File: lib/domain/vg-app-user-auth.js
+  Change summary: Add listProjectSessions domain method.
+  Reason: Provide a domain entry point for project-level session listing.
+  Risk/notes: Low; method wrapper only.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/domain/vg-app-user-auth.js b/lib/domain/vg-app-user-auth.js
+  index 9d4bf1ed..0f7d0a3c 100644
+  --- a/lib/domain/vg-app-user-auth.js
+  +++ b/lib/domain/vg-app-user-auth.js
+  @@ -220,6 +220,11 @@ const listSessions = async (container, actorId, options) => {
+     const { VgAppUserAuth } = container;
+     return VgAppUserAuth.getActiveSessionsByActorId(actorId, options);
+   };
+  +
+  +const listProjectSessions = async (container, filters, options) => {
+  +  const { VgAppUserAuth } = container;
+  +  return VgAppUserAuth.getActiveSessionsByProject(filters, options);
+  +};
+  @@ -232,6 +237,7 @@ module.exports = {
+     revokeSessions,
+     setActive,
+     clearLockout,
+     listSessions,
+  +  listProjectSessions
+   };
+  ```
+
+- Date: 2025-12-22
+  File: lib/resources/vg-app-user-auth.js
+  Change summary: Add project-level sessions listing endpoint with filters.
+  Reason: Support project login history tab with user/date filters and paging.
+  Risk/notes: Low; adds new GET endpoint and header.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/resources/vg-app-user-auth.js b/lib/resources/vg-app-user-auth.js
+  index 0f2c1c48..f8a0c24b 100644
+  --- a/lib/resources/vg-app-user-auth.js
+  +++ b/lib/resources/vg-app-user-auth.js
+  @@ -12,6 +12,20 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
+       if (!Number.isFinite(num) || !Number.isInteger(num) || num <= 0)
+         throw Problem.user.invalidDataTypeOfParameter({ field, expected: 'positive integer' });
+       return num;
+     };
+  +  const parseIntParam = (value, field) => {
+  +    if (value == null) return null;
+  +    const num = Number(value);
+  +    if (!Number.isFinite(num) || !Number.isInteger(num))
+  +      throw Problem.user.invalidDataTypeOfParameter({ field, expected: 'integer' });
+  +    return num;
+  +  };
+  +  const parseDateParam = (value, field) => {
+  +    if (value == null) return null;
+  +    const parsed = new Date(value);
+  +    if (Number.isNaN(parsed.getTime()))
+  +      throw Problem.user.invalidDataTypeOfParameter({ field, expected: 'ISO datetime' });
+  +    return parsed;
+  +  };
+  @@ -108,6 +122,38 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
+           }));
+         })
+     ));
+  +
+  +  // List active app-user sessions for a project (admin/manager).
+  +  service.get('/projects/:projectId/app-users/sessions', endpoint(
+  +    ({ Projects, VgAppUserAuth }, { auth, params, queryOptions }, __, response) =>
+  +      Projects.getById(params.projectId)
+  +        .then(getOrNotFound)
+  +        .then((project) => auth.canOrReject('field_key.list', project))
+  +        .then(() => {
+  +          const options = queryOptions.allowArgs('appUserId', 'dateFrom', 'dateTo');
+  +          const args = options.args || {};
+  +          const filters = {
+  +            projectId: parseIntParam(params.projectId, 'projectId'),
+  +            appUserId: parseIntParam(args.appUserId, 'appUserId'),
+  +            dateFrom: parseDateParam(args.dateFrom, 'dateFrom'),
+  +            dateTo: parseDateParam(args.dateTo, 'dateTo')
+  +          };
+  +
+  +          if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo)
+  +            throw Problem.user.invalidEntity({ reason: 'dateFrom must be before dateTo.' });
+  +
+  +          return vgAuth.listProjectSessions({ VgAppUserAuth }, filters, options);
+  +        })
+  +        .then((sessions) => {
+  +          const total = sessions.length !== 0 && Number.isFinite(Number(sessions[0].total_count))
+  +            ? Number(sessions[0].total_count)
+  +            : sessions.length;
+  +          response.set('X-Total-Count', total);
+  +          return sessions.map((s) => ({
+  +            id: s.id,
+  +            appUserId: s.appUserId,
+  +            createdAt: s.createdAt,
+  +            expiresAt: s.expiresAt,
+  +            ip: s.ip,
+  +            userAgent: s.user_agent,
+  +            deviceId: s.device_id,
+  +            comments: s.comments
+  +          }));
+  +        })
+  +  ));
+  ```
+
+- Date: 2025-12-22
+  File: lib/resources/vg-app-user-auth.js
+  Change summary: Add revoke single app-user session endpoint.
+  Reason: Allow admins to deactivate individual app-user sessions.
+  Risk/notes: Medium; new endpoint that terminates sessions.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/resources/vg-app-user-auth.js b/lib/resources/vg-app-user-auth.js
+  index f8a0c24b..f6a0ff32 100644
+  --- a/lib/resources/vg-app-user-auth.js
+  +++ b/lib/resources/vg-app-user-auth.js
+  @@ -150,6 +150,23 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
+           return sessions.map((s) => ({
+             id: s.id,
+             appUserId: s.appUserId,
+             createdAt: s.createdAt,
+             expiresAt: s.expires_at,
+             ip: s.ip,
+             userAgent: s.user_agent,
+             deviceId: s.device_id,
+             comments: s.comments
+           }));
+         })
+     ));
+  +
+  +  // Revoke a single app-user session (admin/manager).
+  +  service.post('/projects/:projectId/app-users/sessions/:sessionId/revoke', endpoint(
+  +    ({ Projects, VgAppUserAuth, Sessions, Audits }, { auth, params }) =>
+  +      Projects.getById(params.projectId)
+  +        .then(getOrNotFound)
+  +        .then((project) => auth.canOrReject('session.end', project))
+  +        .then(() => VgAppUserAuth.getSessionById(parsePositiveInt(params.sessionId, 'sessionId')))
+  +        .then(getOrNotFound)
+  +        .then((session) => {
+  +          if (session.projectId !== Number(params.projectId))
+  +            return Problem.user.notFound();
+  +          const revokedBy = auth.actor.orNull();
+  +          return vgAuth.revokeSessionById({ Sessions, VgAppUserAuth, Audits }, session, revokedBy)
+  +            .then(() => success);
+  +        })
+  +  ));
+  ```
+
+- Date: 2025-12-22
+  File: lib/model/query/vg-app-user-auth.js
+  Change summary: Store and query app-user session history from vg_app_user_sessions.
+  Reason: Preserve login history even after sessions are reaped.
+  Risk/notes: Medium; shifts history queries off sessions table.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/model/query/vg-app-user-auth.js b/lib/model/query/vg-app-user-auth.js
+  index 52c9ce8b..bfe3dc9b 100644
+  --- a/lib/model/query/vg-app-user-auth.js
+  +++ b/lib/model/query/vg-app-user-auth.js
+  @@ -83,8 +83,8 @@ const recordSession = ({ token, actorId, ip = null, userAgent = null, deviceId =
+   -  run(sql`
+   -    INSERT INTO vg_app_user_sessions (token, "actorId", ip, user_agent, device_id, comments)
+   -    VALUES (${token}, ${actorId}, ${ip}, ${userAgent}, ${deviceId}, ${comments})
+   +  run(sql`
+   +    INSERT INTO vg_app_user_sessions (token, "actorId", ip, user_agent, device_id, comments, "createdAt", expires_at)
+   +    VALUES (${token}, ${actorId}, ${ip}, ${userAgent}, ${deviceId}, ${comments}, ${createdAt}, ${expiresAt})
+       ON CONFLICT (token) DO UPDATE
+         SET "actorId" = EXCLUDED."actorId",
+  @@ -92,7 +92,9 @@ const recordSession = ({ token, actorId, ip = null, userAgent = null, deviceId =
+           ip = EXCLUDED.ip,
+           user_agent = EXCLUDED.user_agent,
+           device_id = EXCLUDED.device_id,
+   -      comments = EXCLUDED.comments
+   +      comments = EXCLUDED.comments,
+   +      "createdAt" = EXCLUDED."createdAt",
+   +      expires_at = EXCLUDED.expires_at
+     `);
+  
+  -const getActiveSessionsByActorId = (actorId, options = QueryOptions.none) => ({ all }) =>
+  +const getSessionsByActorId = (actorId, options = QueryOptions.none) => ({ all }) =>
+     all(sql`
+       SELECT
+         count(*) OVER () AS total_count,
+  -      s.token,
+  -      s."createdAt",
+  -      s."expiresAt",
+  +      v.token,
+  +      v."createdAt",
+  +      v.expires_at,
+         v.id,
+  @@ -100,9 +102,8 @@ const getActiveSessionsByActorId = (actorId, options = QueryOptions.none) => ({ all }) =>
+         v.user_agent,
+         v.device_id,
+         v.comments
+  -    FROM sessions s
+  -    JOIN vg_app_user_sessions v ON v.token = s.token
+  -    WHERE s."actorId"=${actorId}
+  -    ORDER BY s."createdAt" DESC
+  +    FROM vg_app_user_sessions v
+  +    WHERE v."actorId"=${actorId}
+  +    ORDER BY v."createdAt" DESC
+       ${page(options)}
+     `);
+  @@ -112,7 +113,7 @@ const projectSessionFilterer = (filters) => {
+  -  if (filters.appUserId != null) conditions.push(sql`s."actorId"=${filters.appUserId});
+  -  if (filters.dateFrom != null) conditions.push(sql`s."createdAt" >= ${filters.dateFrom});
+  -  if (filters.dateTo != null) conditions.push(sql`s."createdAt" <= ${filters.dateTo});
+  +  if (filters.appUserId != null) conditions.push(sql`v."actorId"=${filters.appUserId});
+  +  if (filters.dateFrom != null) conditions.push(sql`v."createdAt" >= ${filters.dateFrom});
+  +  if (filters.dateTo != null) conditions.push(sql`v."createdAt" <= ${filters.dateTo});
+     return (conditions.length === 0) ? sql`true` : sql.join(conditions, sql` and `);
+   };
+  
+  -const getActiveSessionsByProject = (filters = {}, options = QueryOptions.none) => ({ all }) =>
+  +const getSessionsByProject = (filters = {}, options = QueryOptions.none) => ({ all }) =>
+     all(sql`
+       SELECT
+         count(*) OVER () AS total_count,
+  -      s."actorId" AS "appUserId",
+  -      s."createdAt",
+  -      s."expiresAt",
+  +      v."actorId" AS "appUserId",
+  +      v."createdAt",
+  +      v.expires_at,
+         v.id,
+  @@ -121,9 +122,8 @@ const getActiveSessionsByProject = (filters = {}, options = QueryOptions.none) => ({ all }) =>
+         v.user_agent,
+         v.device_id,
+         v.comments
+  -    FROM sessions s
+  -    JOIN vg_app_user_sessions v ON v.token = s.token
+  -    JOIN field_keys fk ON fk."actorId" = s."actorId"
+  +    FROM vg_app_user_sessions v
+  +    JOIN field_keys fk ON fk."actorId" = v."actorId"
+       WHERE ${projectSessionFilterer(filters)}
+  -    ORDER BY s."createdAt" DESC
+  +    ORDER BY v."createdAt" DESC
+       ${page(options)}
+     `);
+  ```
+
+- Date: 2025-12-22
+  File: lib/domain/vg-app-user-auth.js
+  Change summary: Persist session timestamps in vg_app_user_sessions.
+  Reason: Keep login history after session reap.
+  Risk/notes: Low.
+  Related commits/PRs: vg-work history
+  Diff:
+  ```diff
+  diff --git a/lib/domain/vg-app-user-auth.js b/lib/domain/vg-app-user-auth.js
+  index 0f7d0a3c..d4fe06d7 100644
+  --- a/lib/domain/vg-app-user-auth.js
+  +++ b/lib/domain/vg-app-user-auth.js
+  @@ -133,7 +133,9 @@ const login = async (container, payload) => {
+     await VgAppUserAuth.recordSession({
+       token: session.token,
+       actorId: record.actorId,
+       ip,
+       userAgent,
+       deviceId,
+  -    comments
+  +    comments,
+  +    createdAt: session.createdAt,
+  +    expiresAt: session.expiresAt
+     });
+  ```

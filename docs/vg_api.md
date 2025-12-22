@@ -130,11 +130,39 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 **GET /projects/:projectId/app-users/:id/sessions**
 
 - Auth: Admin/manager on the project (web UI).
+- Query params (optional): `limit`, `offset` for pagination.
+- Response header: `X-Total-Count` for total sessions matching the filter.
+- Returns session history for the app user (including expired sessions).
 - Response — HTTP 200, application/json:
   ```json
   [
     { "id": 10, "createdAt": "2025-12-16T16:00:00.000Z", "expiresAt": "2025-12-19T16:00:00.000Z", "ip": "127.0.0.1", "userAgent": "Collect/1.0", "deviceId": "device-123", "comments": "tablet-1" }
   ]
+
+### List app-user sessions by project (admin)
+**GET /projects/:projectId/app-users/sessions**
+
+- Auth: Admin/manager on the project (web UI).
+- Query params (optional): `appUserId`, `dateFrom`, `dateTo`, `limit`, `offset`.
+- `dateFrom`/`dateTo` filter by session creation time (`createdAt`).
+- Response header: `X-Total-Count` for total sessions matching the filter.
+- Returns session history (including expired sessions).
+- Response — HTTP 200, application/json:
+  ```json
+  [
+    { "id": 10, "appUserId": 12, "createdAt": "2025-12-16T16:00:00.000Z", "expiresAt": "2025-12-19T16:00:00.000Z", "ip": "127.0.0.1", "userAgent": "Collect/1.0", "deviceId": "device-123", "comments": "tablet-1" }
+  ]
+  ```
+
+### Revoke a single app-user session (admin)
+**POST /projects/:projectId/app-users/sessions/:sessionId/revoke**
+
+- Auth: Admin/manager on the project (web UI).
+- Behavior: terminates the session and marks it inactive in history.
+- Response — HTTP 200, application/json:
+  ```json
+  { "success": true }
+  ```
   ```
 
 ### Submit telemetry (app user)
@@ -171,6 +199,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 - Auth: Requires `config.read` permission.
 - Query params (all optional): `projectId`, `deviceId`, `appUserId`, `dateFrom`, `dateTo`, `limit`, `offset`.
 - `dateFrom`/`dateTo` filter by server receive time (`dateTime`).
+- Response header: `X-Total-Count` for total rows matching filters.
 - Response — HTTP 200, application/json:
   ```json
   [
