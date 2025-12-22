@@ -57,19 +57,23 @@ CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_ip_createdat ON vg_app_user_log
 -- App-user session metadata (IP/device tracking).
 CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
   id bigserial PRIMARY KEY,
-  token text NOT NULL UNIQUE REFERENCES sessions(token) ON DELETE CASCADE,
+  token text NOT NULL UNIQUE,
   "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
   ip inet NULL,
   user_agent text NULL,
   device_id text NULL,
   comments text NULL,
-  "createdAt" timestamptz NOT NULL DEFAULT now()
+  "createdAt" timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NULL
 );
 ALTER TABLE IF EXISTS vg_app_user_sessions
   ADD COLUMN IF NOT EXISTS device_id text;
 ALTER TABLE IF EXISTS vg_app_user_sessions
   ADD COLUMN IF NOT EXISTS comments text;
+ALTER TABLE IF EXISTS vg_app_user_sessions
+  ADD COLUMN IF NOT EXISTS expires_at timestamptz;
 CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC);
+CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_expires_at ON vg_app_user_sessions (expires_at DESC);
 
 -- App-user telemetry data (device metadata, location, timestamps).
 CREATE TABLE IF NOT EXISTS vg_app_user_telemetry (
