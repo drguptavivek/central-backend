@@ -47,7 +47,7 @@ INSERT INTO vg_settings (vg_key_name, vg_key_value)
 CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
   id bigserial PRIMARY KEY,
   username text NOT NULL,
-  ip inet,
+  ip text,
   succeeded boolean NOT NULL,
   "createdAt" timestamptz NOT NULL DEFAULT now()
 );
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
   id bigserial PRIMARY KEY,
   token text NOT NULL UNIQUE,
   "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-  ip inet NULL,
+  ip text NULL,
   user_agent text NULL,
   device_id text NULL,
   comments text NULL,
@@ -72,6 +72,29 @@ ALTER TABLE IF EXISTS vg_app_user_sessions
   ADD COLUMN IF NOT EXISTS comments text;
 ALTER TABLE IF EXISTS vg_app_user_sessions
   ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+-- Convert ip from inet to text if needed
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'vg_app_user_sessions'
+    AND column_name = 'ip'
+    AND data_type = 'inet'
+  ) THEN
+    ALTER TABLE vg_app_user_sessions ALTER COLUMN ip TYPE text USING ip::text;
+  END IF;
+END$$;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'vg_app_user_login_attempts'
+    AND column_name = 'ip'
+    AND data_type = 'inet'
+  ) THEN
+    ALTER TABLE vg_app_user_login_attempts ALTER COLUMN ip TYPE text USING ip::text;
+  END IF;
+END$$;
 CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC);
 CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_expires_at ON vg_app_user_sessions (expires_at DESC);
 
