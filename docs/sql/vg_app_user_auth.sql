@@ -126,4 +126,10 @@ UPDATE roles
 SET verbs = coalesce(verbs, '[]'::jsonb) || '["field_key.update"]'::jsonb
 WHERE system IN ('admin', 'manager');
 
+-- Add project.read to app-user role so they can access GET /v1/projects/:id
+UPDATE roles
+SET verbs = verbs || '["project.read"]'::jsonb
+WHERE system = 'app-user'
+  AND NOT verbs @> '["project.read"]'::jsonb;
+
 COMMIT;
