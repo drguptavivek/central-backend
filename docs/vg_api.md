@@ -169,7 +169,7 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 **POST /projects/:projectId/app-users/telemetry**
 
 - Auth: App user bearer token (Collect).
-- Request (JSON): `deviceId`, `collectVersion`, and `deviceDateTime` are required. `deviceDateTime` must be a UTC ISO string (`Z` or `+00:00`). `location` is required and must include `latitude` and `longitude` (other fields optional).
+- Request (JSON): `deviceId`, `collectVersion`, and `deviceDateTime` are required. `deviceDateTime` must be a UTC ISO string (`Z` or `+00:00`). The `location` object is optional, but if provided, it must contain `latitude` and `longitude`.
 - App users only; web users cannot submit telemetry on their behalf.
   ```json
   {
@@ -257,16 +257,16 @@ Short-lived, password-based auth for Collect-style app users tied to projects. T
 - Auth: Requires `config.read` permission.
 - Response — HTTP 200, application/json:
   ```json
-  { "vg_app_user_session_ttl_days": 3, "vg_app_user_session_cap": 3 }
+  { "vg_app_user_session_ttl_days": 3, "vg_app_user_session_cap": 3, "admin_pw": "current_password" }
   ```
 
 ### Update session settings
 **PUT /system/settings**
 
 - Auth: Requires `config.set` permission.
-- Request (JSON): provide either or both.
+- Request (JSON): provide any or all fields.
   ```json
-  { "vg_app_user_session_ttl_days": 5, "vg_app_user_session_cap": 2 }
+  { "vg_app_user_session_ttl_days": 5, "vg_app_user_session_cap": 2, "admin_pw": "new_password" }
   ```
 - Response — HTTP 200, application/json:
   ```json
