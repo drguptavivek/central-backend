@@ -29,10 +29,11 @@ describe('api: vg app-user auth', () => {
     const { count } = await container.one(sql`select count(*) from sessions where "actorId"=${appUser.id}`);
     Number(count).should.equal(0);
 
-    const login = await service.post('/v1/projects/1/app-users/login')
+    const loginResponse = await service.post('/v1/projects/1/app-users/login')
       .send({ username: 'vguser-login', password: STRONG_PASSWORD })
-      .expect(200)
-      .then((res) => res.body);
+      .then((res) => res);
+    loginResponse.status.should.equal(200, JSON.stringify(loginResponse.body));
+    const login = loginResponse.body;
 
     should.exist(login.token);
     should.exist(login.id);
@@ -40,6 +41,7 @@ describe('api: vg app-user auth', () => {
     login.token.should.be.a.token();
     login.id.should.equal(appUser.id);
     should.exist(login.expiresAt);
+    should.exist(login.serverTime);
 
     const { expiresAt, createdAt } = await container.one(sql`
       select "expiresAt", "createdAt" from sessions where token=${login.token}
