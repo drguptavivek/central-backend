@@ -41,7 +41,7 @@ module.exports = async ({ run }) => {
     CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
       id bigserial PRIMARY KEY,
       username text NOT NULL,
-      ip inet,
+      ip text,
       succeeded boolean NOT NULL,
       "createdAt" timestamptz NOT NULL DEFAULT now()
     )
@@ -54,14 +54,17 @@ module.exports = async ({ run }) => {
       id bigserial PRIMARY KEY,
       token text NOT NULL UNIQUE REFERENCES sessions(token) ON DELETE CASCADE,
       "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-      ip inet NULL,
+      ip text NULL,
       user_agent text NULL,
       device_id text NULL,
       comments text NULL,
-      "createdAt" timestamptz NOT NULL DEFAULT now()
+      "createdAt" timestamptz NOT NULL DEFAULT now(),
+      expires_at timestamptz NULL
     )
   `);
+  await run(sql`ALTER TABLE IF EXISTS vg_app_user_sessions ADD COLUMN IF NOT EXISTS expires_at timestamptz`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC)`);
+  await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_expires_at ON vg_app_user_sessions (expires_at DESC)`);
 
   await run(sql`
     CREATE TABLE IF NOT EXISTS vg_app_user_telemetry (
@@ -83,4 +86,10 @@ module.exports = async ({ run }) => {
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_received ON vg_app_user_telemetry ("actorId", received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_device_received ON vg_app_user_telemetry (device_id, received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_telemetry (received_at DESC)`);
+
+  await run(sql`
+    INSERT INTO vg_settings (vg_key_name, vg_key_value)
+    VALUES ('admin_pw', 'vg_custom')
+    ON CONFLICT (vg_key_name) DO NOTHING
+  `);
 };
