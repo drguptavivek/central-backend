@@ -55,8 +55,11 @@ describe('api: vg telemetry', () => {
       .then(({ body }) => body);
 
     should.exist(first.id);
+    first.appUserId.should.equal(appUser.id);
+    first.deviceId.should.equal(firstPayload.deviceId);
     should.exist(first.dateTime);
     should.exist(first.serverTime);
+    first.status.should.equal('ok');
 
     const secondPayload = makeTelemetryPayload({ deviceId: 'device-2' });
     await service.post('/v1/projects/1/app-users/telemetry')
