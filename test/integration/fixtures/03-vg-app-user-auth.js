@@ -52,7 +52,7 @@ module.exports = async ({ run }) => {
   await run(sql`
     CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
       id bigserial PRIMARY KEY,
-      token text NOT NULL UNIQUE REFERENCES sessions(token) ON DELETE CASCADE,
+      token text NOT NULL UNIQUE,
       "actorId" integer NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
       ip text NULL,
       user_agent text NULL,
@@ -62,6 +62,7 @@ module.exports = async ({ run }) => {
       expires_at timestamptz NULL
     )
   `);
+  await run(sql`ALTER TABLE IF EXISTS vg_app_user_sessions DROP CONSTRAINT IF EXISTS vg_app_user_sessions_token_fkey`);
   await run(sql`ALTER TABLE IF EXISTS vg_app_user_sessions ADD COLUMN IF NOT EXISTS expires_at timestamptz`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_actor_createdat ON vg_app_user_sessions ("actorId", "createdAt" DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_sessions_expires_at ON vg_app_user_sessions (expires_at DESC)`);
@@ -74,6 +75,7 @@ module.exports = async ({ run }) => {
       collect_version text NOT NULL,
       device_date_time timestamptz NOT NULL,
       received_at timestamptz NOT NULL DEFAULT now(),
+      client_event_id text NULL,
       event jsonb NULL,
       location_lat double precision NULL,
       location_lng double precision NULL,
@@ -84,10 +86,16 @@ module.exports = async ({ run }) => {
       location_provider text NULL
     )
   `);
+  await run(sql`ALTER TABLE IF EXISTS vg_app_user_telemetry ADD COLUMN IF NOT EXISTS client_event_id text`);
   await run(sql`ALTER TABLE IF EXISTS vg_app_user_telemetry ADD COLUMN IF NOT EXISTS event jsonb`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_received ON vg_app_user_telemetry ("actorId", received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_device_received ON vg_app_user_telemetry (device_id, received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_telemetry (received_at DESC)`);
+  await run(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_device_client_event
+    ON vg_app_user_telemetry ("actorId", device_id, client_event_id)
+    WHERE client_event_id IS NOT NULL
+  `);
 
   await run(sql`
     INSERT INTO vg_settings (vg_key_name, vg_key_value)
