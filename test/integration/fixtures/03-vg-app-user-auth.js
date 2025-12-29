@@ -74,6 +74,7 @@ module.exports = async ({ run }) => {
       collect_version text NOT NULL,
       device_date_time timestamptz NOT NULL,
       received_at timestamptz NOT NULL DEFAULT now(),
+      event jsonb NULL,
       location_lat double precision NULL,
       location_lng double precision NULL,
       location_altitude double precision NULL,
@@ -83,6 +84,7 @@ module.exports = async ({ run }) => {
       location_provider text NULL
     )
   `);
+  await run(sql`ALTER TABLE IF EXISTS vg_app_user_telemetry ADD COLUMN IF NOT EXISTS event jsonb`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_received ON vg_app_user_telemetry ("actorId", received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_device_received ON vg_app_user_telemetry (device_id, received_at DESC)`);
   await run(sql`CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_telemetry (received_at DESC)`);
