@@ -672,6 +672,12 @@ describe('api: vg app-user auth', () => {
         .expect(404));
   }));
 
+  it('should allow system settings update with missing body', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.put('/v1/system/settings')
+        .expect(200));
+  }));
+
   it('should validate session settings updates', testService(async (service) => {
     const asAlice = await service.login('alice');
     const cases = [
