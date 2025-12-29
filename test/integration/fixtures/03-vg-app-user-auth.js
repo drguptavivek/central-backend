@@ -96,6 +96,11 @@ module.exports = async ({ run }) => {
     ON vg_app_user_telemetry ("actorId", device_id, client_event_id)
     WHERE client_event_id IS NOT NULL
   `);
+  await run(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_device_time_no_event
+    ON vg_app_user_telemetry ("actorId", device_id, device_date_time)
+    WHERE client_event_id IS NULL
+  `);
 
   await run(sql`
     INSERT INTO vg_settings (vg_key_name, vg_key_value)

@@ -128,6 +128,9 @@ CREATE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_received ON vg_app_user_tel
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_device_client_event
   ON vg_app_user_telemetry ("actorId", device_id, client_event_id)
   WHERE client_event_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_device_time_no_event
+  ON vg_app_user_telemetry ("actorId", device_id, device_date_time)
+  WHERE client_event_id IS NULL;
 
 -- Ensure admin/manager roles can update app users (displayName/phone).
 UPDATE roles

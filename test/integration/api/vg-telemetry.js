@@ -184,6 +184,40 @@ describe('api: vg telemetry', () => {
       .expect(400);
   }));
 
+  it('should dedupe retries without events by device timestamp', testService(async (service) => {
+    const username = `vguser-telemetry-retry-${Math.random().toString(36).slice(2, 8)}`;
+    const appUser = await createAppUser(service, { username });
+    const login = await loginAppUser(service, username);
+
+    const payload = makeTelemetryPayload({
+      deviceId: 'device-retry-1',
+      deviceDateTime: '2025-12-21T10:02:00.000Z'
+    });
+    delete payload.event;
+    delete payload.events;
+
+    await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(200);
+
+    await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(200);
+
+    const stored = await service.login('alice', (asAlice) =>
+      asAlice.get('/v1/system/app-users/telemetry')
+        .query({ projectId: 1, deviceId: payload.deviceId, appUserId: appUser.id, limit: 50, offset: 0 })
+        .expect(200)
+        .then(({ body }) => body));
+
+    stored.length.should.equal(1);
+    should.equal(stored[0].clientEventId, null);
+    should.equal(stored[0].event, null);
+    stored[0].deviceDateTime.should.equal(payload.deviceDateTime);
+  }));
+
   it('should dedupe/upsert replayed events by (appUserId, deviceId, clientEventId)', testService(async (service) => {
     const username = `vguser-telemetry-dedupe-${Math.random().toString(36).slice(2, 8)}`;
     const appUser = await createAppUser(service, { username });
