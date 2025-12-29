@@ -121,6 +121,12 @@ describe('api: vg app-user auth', () => {
       .expect(200);
   }));
 
+  it('should reject lockout clear with missing body', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/system/app-users/lockouts/clear')
+        .expect(400));
+  }));
+
   it('should list active app-user sessions with IP, user agent, deviceId, and comments', testService(async (service) => {
     const username = 'vguser-session-list';
     const appUser = await createAppUser(service, { username });
