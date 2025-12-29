@@ -1,4 +1,5 @@
 const should = require('should');
+const { sql } = require('slonik');
 require('../assertions');
 const { testService } = require('../setup');
 
@@ -107,6 +108,45 @@ describe('api: vg telemetry', () => {
     older[0].deviceId.should.equal('device-1');
   }));
 
+  it('should reject non-integer appUserId filter values', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.get('/v1/system/app-users/telemetry')
+        .query({ projectId: 1, appUserId: '1abc' })
+        .expect(400));
+  }));
+
+  it('should reject telemetry payload appUserId that does not match the token actor', testService(async (service) => {
+    const usernameA = 'vguser-telemetry-a';
+    const userA = await createAppUser(service, { username: usernameA });
+    const userB = await createAppUser(service, { username: 'vguser-telemetry-b' });
+    const login = await loginAppUser(service, usernameA);
+
+    const payload = makeTelemetryPayload({
+      appUserId: userB.id,
+      deviceId: 'device-appuserid-1'
+    });
+
+    await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(400);
+  }));
+
+  it('should require latitude and longitude when location is provided', testService(async (service) => {
+    const username = 'vguser-telemetry-location';
+    await createAppUser(service, { username });
+    const login = await loginAppUser(service, username);
+
+    const payload = makeTelemetryPayload({
+      location: { altitude: 10.5 }
+    });
+
+    await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(400);
+  }));
+
   it('should reject non-UTC deviceDateTime', testService(async (service) => {
     const username = 'vguser-telemetry-utc';
     await createAppUser(service, { username });
@@ -166,6 +206,40 @@ describe('api: vg telemetry', () => {
     const byClientEventId = Object.fromEntries(stored.map((r) => [r.clientEventId, r]));
     byClientEventId['evt-1'].event.should.eql(payload.events[0]);
     byClientEventId['evt-2'].event.should.eql(payload.events[1]);
+  }));
+
+  it('should treat duplicate event ids as last-write-wins within a batch', testService(async (service) => {
+    const username = `vguser-telemetry-dup-${Math.random().toString(36).slice(2, 8)}`;
+    const appUser = await createAppUser(service, { username });
+    const login = await loginAppUser(service, username);
+
+    const payload = makeTelemetryPayload({
+      deviceId: 'device-dup-1',
+      events: [
+        { id: 'evt-dup-1', type: 'app.started', occurredAt: '2025-12-21T10:02:00.000Z' },
+        { id: 'evt-dup-1', type: 'app.closed', occurredAt: '2025-12-21T10:05:00.000Z' }
+      ]
+    });
+
+    const res = await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(200)
+      .then(({ body }) => body);
+
+    res.should.be.an.Array();
+    res.length.should.equal(1);
+    res[0].clientEventId.should.equal('evt-dup-1');
+
+    const stored = await service.login('alice', (asAlice) =>
+      asAlice.get('/v1/system/app-users/telemetry')
+        .query({ projectId: 1, deviceId: payload.deviceId, appUserId: appUser.id, limit: 50, offset: 0 })
+        .expect(200)
+        .then(({ body }) => body));
+
+    stored.length.should.equal(1);
+    stored[0].clientEventId.should.equal('evt-dup-1');
+    stored[0].event.type.should.equal('app.closed');
   }));
 
   it('should reject an empty events array', testService(async (service) => {
@@ -248,6 +322,38 @@ describe('api: vg telemetry', () => {
     stored[0].clientEventId.should.equal('evt-replay-1');
     should.exist(stored[0].event);
     stored[0].event.type.should.equal('token.refreshed');
+  }));
+
+  it('should accept telemetry for recently expired app-user sessions and report invalidated status', testService(async (service, container) => {
+    const username = `vguser-telemetry-expired-${Math.random().toString(36).slice(2, 8)}`;
+    await createAppUser(service, { username });
+    const login = await loginAppUser(service, username);
+
+    await container.run(sql`
+      UPDATE vg_app_user_sessions
+      SET expires_at = now() - interval '1 minute'
+      WHERE token = ${login.token}
+    `);
+    await container.run(sql`
+      UPDATE sessions
+      SET "expiresAt" = now() - interval '1 minute'
+      WHERE token = ${login.token}
+    `);
+
+    const payload = makeTelemetryPayload({
+      deviceId: 'device-expired-1',
+      events: [{ id: 'evt-expired-1', type: 'app.started', occurredAt: '2025-12-21T10:02:00.000Z' }]
+    });
+
+    const res = await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(200)
+      .then(({ body }) => body);
+
+    res.should.be.an.Array();
+    res.length.should.equal(1);
+    res[0].status.should.equal('invalidated');
   }));
 
   it('should accept telemetry after the bearer token is revoked (queued offline) and report invalidated status', testService(async (service) => {
