@@ -344,6 +344,20 @@ describe('api: vg app-user auth', () => {
       .expect(200);
   }));
 
+  it('should reject password change with missing body', testService(async (service) => {
+    const username = 'vguser-change-missing';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(400);
+  }));
+
   it('should allow password change and invalidate previous sessions', testService(async (service) => {
     const username = 'vguser-change';
     const appUser = await createAppUser(service, { username });
