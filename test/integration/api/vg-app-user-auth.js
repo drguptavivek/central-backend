@@ -390,6 +390,15 @@ describe('api: vg app-user auth', () => {
       .expect(401);
   }));
 
+  it('should reject admin reset with missing body', testService(async (service) => {
+    const username = 'vguser-reset-missing';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .expect(400));
+  }));
+
   it('should allow admin reset and deactivation to block login and terminate sessions', testService(async (service, container) => {
     const username = 'vguser-reset';
     const appUser = await createAppUser(service, { username });
