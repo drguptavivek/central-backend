@@ -127,6 +127,16 @@ describe('api: vg app-user auth', () => {
         .expect(400));
   }));
 
+  it('should reject activate/deactivate with missing body', testService(async (service) => {
+    const username = 'vguser-active-missing';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.3); }));
+  }));
+
   it('should list active app-user sessions with IP, user agent, deviceId, and comments', testService(async (service) => {
     const username = 'vguser-session-list';
     const appUser = await createAppUser(service, { username });
