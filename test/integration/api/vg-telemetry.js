@@ -168,6 +168,22 @@ describe('api: vg telemetry', () => {
     byClientEventId['evt-2'].event.should.eql(payload.events[1]);
   }));
 
+  it('should reject an empty events array', testService(async (service) => {
+    const username = `vguser-telemetry-empty-${Math.random().toString(36).slice(2, 8)}`;
+    await createAppUser(service, { username });
+    const login = await loginAppUser(service, username);
+
+    const payload = makeTelemetryPayload({
+      deviceId: 'device-empty-1',
+      events: []
+    });
+
+    await service.post('/v1/projects/1/app-users/telemetry')
+      .set('Authorization', `Bearer ${login.token}`)
+      .send(payload)
+      .expect(400);
+  }));
+
   it('should dedupe/upsert replayed events by (appUserId, deviceId, clientEventId)', testService(async (service) => {
     const username = `vguser-telemetry-dedupe-${Math.random().toString(36).slice(2, 8)}`;
     const appUser = await createAppUser(service, { username });
