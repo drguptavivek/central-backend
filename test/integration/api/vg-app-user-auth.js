@@ -591,7 +591,7 @@ describe('api: vg app-user auth', () => {
       .expect(403);
   }));
 
-  it('should revoke only the current session on self-revoke', testService(async (service) => {
+  it('should revoke only the current session on self-revoke', testService(async (service, container) => {
     const username = 'vguser-self-revoke';
     const appUser = await createAppUser(service, { username });
 
@@ -608,6 +608,16 @@ describe('api: vg app-user auth', () => {
     await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
       .set('Authorization', `Bearer ${tokenA}`)
       .expect(200);
+
+    const now = Date.now();
+    const { expires_at: revokedExpiresAt } = await container.one(sql`
+      select expires_at from vg_app_user_sessions where token=${tokenA}
+    `);
+    const { expires_at: activeExpiresAt } = await container.one(sql`
+      select expires_at from vg_app_user_sessions where token=${tokenB}
+    `);
+    new Date(revokedExpiresAt).getTime().should.be.belowOrEqual(now);
+    new Date(activeExpiresAt).getTime().should.be.above(now);
 
     await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
       .set('Authorization', `Bearer ${tokenA}`)
