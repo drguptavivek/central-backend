@@ -64,6 +64,15 @@ describe('api: vg app-user auth', () => {
       .expect(400);
   }));
 
+  it('should allow app-user patch with missing body', testService(async (service) => {
+    const username = 'vguser-missing-body';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+        .expect(200));
+  }));
+
   it('should lock out after five failed attempts per username and IP', testService(async (service, container) => {
     const username = 'vguser-lockout';
     await createAppUser(service, { username });
