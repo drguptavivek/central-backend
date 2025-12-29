@@ -51,6 +51,19 @@ describe('api: vg app-user auth', () => {
     new Date(login.expiresAt).getTime().should.be.approximately(new Date(expiresAt).getTime(), 1000);
   }));
 
+  it('should reject non-string login credentials', testService(async (service) => {
+    const username = 'vguser-nonstring';
+    await createAppUser(service, { username });
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: { bad: 'value' }, password: STRONG_PASSWORD })
+      .expect(400);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: 123 })
+      .expect(400);
+  }));
+
   it('should lock out after five failed attempts per username and IP', testService(async (service, container) => {
     const username = 'vguser-lockout';
     await createAppUser(service, { username });
