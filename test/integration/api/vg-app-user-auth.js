@@ -790,6 +790,33 @@ describe('api: vg app-user auth', () => {
       .expect(401);
   }));
 
+  it('should allow admin session revoke after field key deletion', testService(async (service, container) => {
+    const username = 'vguser-orphan-session';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { id: rawSessionId } = await container.one(sql`
+      select id::int as id from vg_app_user_sessions where token=${token}
+    `);
+    const sessionId = Number(rawSessionId);
+    Number.isFinite(sessionId).should.equal(true);
+
+    await container.run(sql`delete from field_keys where "actorId"=${appUser.id}`);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/sessions/${sessionId}/revoke`)
+        .expect(200));
+
+    const { expires_at } = await container.one(sql`
+      select expires_at from vg_app_user_sessions where id=${sessionId}
+    `);
+    should.exist(expires_at);
+  }));
+
   it('should reject login for a username that belongs to a different project', testService(async (service) => {
     const asAlice = await service.login('alice');
     const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'project-login-scope' }).expect(200).then(({ body }) => body);
