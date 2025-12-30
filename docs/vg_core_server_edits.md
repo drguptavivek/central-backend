@@ -9,6 +9,7 @@ This file tracks VG changes made directly to upstream core files.
 - Validate change-password old/new password types and treat whitespace-only values as missing.
 - Restrict session settings numeric strings to integer values.
 - Validate reset-password newPassword type and treat whitespace-only values as missing.
+- Validate self-revoke deviceId as string.
 
 ## lib/domain/vg-app-user-auth.js
 - Return invalidDataTypeOfParameter when patching fullName/phone with non-string values.
