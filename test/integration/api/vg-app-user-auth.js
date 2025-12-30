@@ -780,15 +780,24 @@ describe('api: vg app-user auth', () => {
         .expect(200));
   }));
 
+  it('should accept numeric strings for session settings updates', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    await asAlice.put('/v1/system/settings')
+      .send({ vg_app_user_session_ttl_days: '3', vg_app_user_session_cap: '2' })
+      .expect(200);
+  }));
+
   it('should validate session settings updates', testService(async (service) => {
     const asAlice = await service.login('alice');
     const cases = [
       { vg_app_user_session_ttl_days: 0 },
       { vg_app_user_session_ttl_days: -1 },
       { vg_app_user_session_ttl_days: 'abc' },
+      { vg_app_user_session_ttl_days: '3.5' },
       { vg_app_user_session_cap: 0 },
       { vg_app_user_session_cap: -2 },
-      { vg_app_user_session_cap: 'nope' }
+      { vg_app_user_session_cap: 'nope' },
+      { vg_app_user_session_cap: '2.5' }
     ];
 
     for (const body of cases) {
