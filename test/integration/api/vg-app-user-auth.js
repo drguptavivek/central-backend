@@ -2,6 +2,7 @@ const should = require('should');
 const { sql } = require('slonik');
 require('../assertions');
 const { testService } = require('../setup');
+const { getLockStatus } = require('../../../lib/model/query/vg-app-user-auth');
 
 const STRONG_PASSWORD = 'GoodPass!1X';
 
@@ -155,7 +156,26 @@ describe('api: vg app-user auth', () => {
     successes.should.equal(0);
   }));
 
-  it('should allow admins to clear a login lockout', testService(async (service) => {
+  it('should scope lockout checks to null-ip entries when ip is missing', testService(async (service, container) => {
+    const username = 'vguser-lockout-null-ip';
+    await createAppUser(service, { username });
+
+    await container.run(sql`
+      insert into vg_app_user_login_attempts (username, ip, succeeded)
+      values
+        (${username}, ${null}, false),
+        (${username}, '1.1.1.1', false),
+        (${username}, '1.1.1.1', false)
+    `);
+
+    const nullStatus = await getLockStatus(username, null)(container);
+    const ipStatus = await getLockStatus(username, '1.1.1.1')(container);
+
+    Number(nullStatus.recent_failures).should.equal(1);
+    Number(ipStatus.recent_failures).should.equal(2);
+  }));
+
+  it('should allow admins to clear a login lockout', testService(async (service, container) => {
     const username = 'vguser-lockout-clear';
     await createAppUser(service, { username });
 
@@ -169,9 +189,13 @@ describe('api: vg app-user auth', () => {
       .send({ username, password: STRONG_PASSWORD })
       .expect(401);
 
+    const { ip } = await container.one(sql`
+      select ip from vg_app_user_login_attempts where username=${username} limit 1
+    `);
+
     await service.login('alice', (asAlice) =>
       asAlice.post('/v1/system/app-users/lockouts/clear')
-        .send({ username })
+        .send({ username, ip })
         .expect(200));
 
     await service.post('/v1/projects/1/app-users/login')
