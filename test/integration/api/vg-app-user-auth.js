@@ -507,6 +507,29 @@ describe('api: vg app-user auth', () => {
         .expect(400));
   }));
 
+  it('should reject admin reset with non-string or blank password', testService(async (service) => {
+    const username = 'vguser-reset-types';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: 123 })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.11); }));
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: { bad: true } })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.11); }));
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: '   ' })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.3); }));
+  }));
+
   it('should allow admin reset and deactivation to block login and terminate sessions', testService(async (service, container) => {
     const username = 'vguser-reset';
     const appUser = await createAppUser(service, { username });
