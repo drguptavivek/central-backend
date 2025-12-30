@@ -747,6 +747,22 @@ describe('api: vg app-user auth', () => {
       .expect(401);
   }));
 
+  it('should reject self-revoke with non-string deviceId', testService(async (service) => {
+    const username = 'vguser-revoke-device';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/revoke`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ deviceId: { bad: true } })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.11); });
+  }));
+
   it('should allow admin revoke to invalidate all sessions', testService(async (service) => {
     const username = 'vguser-admin-revoke-all';
     const appUser = await createAppUser(service, { username });
