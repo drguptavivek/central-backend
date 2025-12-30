@@ -120,6 +120,17 @@ describe('api: vg app-user auth', () => {
         .then(({ body }) => { body.code.should.equal(400.11); }));
   }));
 
+  it('should clear phone on whitespace-only patch', testService(async (service) => {
+    const username = 'vguser-phone-whitespace';
+    const appUser = await createAppUser(service, { username, phone: '+123456789' });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+        .send({ phone: '   ' })
+        .expect(200)
+        .then(({ body }) => { should(body.phone).equal(null); }));
+  }));
+
   it('should lock out after five failed attempts per username and IP', testService(async (service, container) => {
     const username = 'vguser-lockout';
     await createAppUser(service, { username });

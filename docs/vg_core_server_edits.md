@@ -10,3 +10,4 @@ This file tracks VG changes made directly to upstream core files.
 
 ## lib/domain/vg-app-user-auth.js
 - Return invalidDataTypeOfParameter when patching fullName/phone with non-string values.
+- Normalize whitespace-only phone values to null.
