@@ -5,6 +5,7 @@ const { testService } = require('../setup');
 const { getLockStatus } = require('../../../lib/model/query/vg-app-user-auth');
 
 const STRONG_PASSWORD = 'GoodPass!1X';
+const LONG_PASSWORD = `Aa1!${'x'.repeat(69)}`;
 
 const createAppUser = (service, overrides = {}) => {
   const payload = {
@@ -490,6 +491,22 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.3); });
   }));
 
+  it('should reject password change with a new password over 72 chars', testService(async (service) => {
+    const username = 'vguser-change-toolong';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: LONG_PASSWORD })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.38); });
+  }));
+
   it('should allow password change and invalidate previous sessions', testService(async (service) => {
     const username = 'vguser-change';
     const appUser = await createAppUser(service, { username });
@@ -552,6 +569,17 @@ describe('api: vg app-user auth', () => {
         .send({ newPassword: '   ' })
         .expect(400)
         .then(({ body }) => { body.code.should.equal(400.3); }));
+  }));
+
+  it('should reject admin reset with a new password over 72 chars', testService(async (service) => {
+    const username = 'vguser-reset-toolong';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/password/reset`)
+        .send({ newPassword: LONG_PASSWORD })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.38); }));
   }));
 
   it('should allow admin reset and deactivation to block login and terminate sessions', testService(async (service, container) => {
