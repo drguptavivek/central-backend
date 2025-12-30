@@ -16,6 +16,7 @@ This file tracks VG changes made directly to upstream core files.
 - Return invalidDataTypeOfParameter when patching fullName/phone with non-string values.
 - Normalize whitespace-only phone values to null.
 - When revoking sessions without a projectId, skip audit acteeId and synthesize a field_key actor for session termination.
+- Reject self revoke when the current auth session is missing.
 
 ## lib/model/query/vg-app-user-auth.js
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
