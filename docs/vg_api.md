@@ -40,3 +40,5 @@ Activates or deactivates an app user.
 ```
 
 `active` must be a boolean. Non-boolean values (for example `"true"` or `1`) return an `invalidDataTypeOfParameter` problem response.
+
+If the app user does not belong to the provided `projectId`, this endpoint returns `404 Not Found`.
