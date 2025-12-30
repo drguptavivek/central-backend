@@ -842,6 +842,87 @@ describe('api: vg app-user auth', () => {
       .expect(401);
   }));
 
+  it('should not duplicate audit logs on repeated session revoke', testService(async (service, container) => {
+    const username = 'vguser-session-revoke-idempotent';
+    await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { id: sessionId } = await container.one(sql`
+      select id::int as id from vg_app_user_sessions where token=${token}
+    `);
+
+    const firstRevoke = await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/sessions/${sessionId}/revoke`));
+    firstRevoke.status.should.equal(200, JSON.stringify(firstRevoke.body));
+
+    const { count: firstCount } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.sessions.revoke'
+        and details->>'sessionId'=${String(sessionId)}
+    `);
+    firstCount.should.equal(1);
+
+    const secondRevoke = await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/sessions/${sessionId}/revoke`));
+    secondRevoke.status.should.equal(200, JSON.stringify(secondRevoke.body));
+
+    const { count: secondCount } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.sessions.revoke'
+        and details->>'sessionId'=${String(sessionId)}
+    `);
+    secondCount.should.equal(1);
+  }));
+
+  it('should not duplicate audit logs on repeated revoke-admin', testService(async (service, container) => {
+    const username = 'vguser-revoke-admin-idempotent';
+    const appUser = await createAppUser(service, { username });
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`)
+        .expect(200));
+
+    const { count: firstDeactivate } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.deactivate'
+        and details->>'username'=${username}
+    `);
+    firstDeactivate.should.equal(1);
+
+    const { count: firstRevoke } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.sessions.revoke'
+        and details->>'username'=${username}
+    `);
+    firstRevoke.should.equal(1);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/revoke-admin`)
+        .expect(200));
+
+    const { count: secondDeactivate } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.deactivate'
+        and details->>'username'=${username}
+    `);
+    secondDeactivate.should.equal(1);
+
+    const { count: secondRevoke } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.sessions.revoke'
+        and details->>'username'=${username}
+    `);
+    secondRevoke.should.equal(1);
+  }));
+
   it('should allow admin session revoke after field key deletion', testService(async (service, container) => {
     const username = 'vguser-orphan-session';
     const appUser = await createAppUser(service, { username });
