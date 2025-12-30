@@ -421,6 +421,40 @@ describe('api: vg app-user auth', () => {
       .expect(400);
   }));
 
+  it('should reject password change with non-string or blank passwords', testService(async (service) => {
+    const username = 'vguser-change-types';
+    const appUser = await createAppUser(service, { username });
+
+    const { token } = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: 123, newPassword: STRONG_PASSWORD })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.11); });
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: { bad: true } })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.11); });
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: '   ', newPassword: STRONG_PASSWORD })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.3); });
+
+    await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: '   ' })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.3); });
+  }));
+
   it('should allow password change and invalidate previous sessions', testService(async (service) => {
     const username = 'vguser-change';
     const appUser = await createAppUser(service, { username });
