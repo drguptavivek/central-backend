@@ -103,6 +103,23 @@ describe('api: vg app-user auth', () => {
         .expect(200));
   }));
 
+  it('should reject app-user patch with non-string fullName or phone', testService(async (service) => {
+    const username = 'vguser-patch-types';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+        .send({ fullName: 123 })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.11); }));
+
+    await service.login('alice', (asAlice) =>
+      asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+        .send({ phone: { bad: true } })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.11); }));
+  }));
+
   it('should lock out after five failed attempts per username and IP', testService(async (service, container) => {
     const username = 'vguser-lockout';
     await createAppUser(service, { username });
