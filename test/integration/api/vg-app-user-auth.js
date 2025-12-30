@@ -82,6 +82,18 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.3); });
   }));
 
+  it('should reject login with non-string deviceId or comments', testService(async (service) => {
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-device', password: STRONG_PASSWORD, deviceId: { bad: true } })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.11); });
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-comments', password: STRONG_PASSWORD, comments: 123 })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.11); });
+  }));
+
   it('should allow app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
