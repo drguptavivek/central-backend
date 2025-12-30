@@ -25,3 +25,18 @@ Records app-user telemetry (device metadata, timestamps, optional location).
 
 `status` becomes `"invalidated"` if the current bearer token no longer resolves as a valid session by the time the telemetry record is processed.
 
+## App Users
+
+### POST `/projects/:projectId/app-users/:id/active`
+
+Activates or deactivates an app user.
+
+**Auth**: `Authorization: Bearer <admin-session-token>`
+
+**Request body**
+
+```json
+{ "active": true }
+```
+
+`active` must be a boolean. Non-boolean values (for example `"true"` or `1`) return an `invalidDataTypeOfParameter` problem response.
