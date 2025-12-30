@@ -195,7 +195,7 @@ describe('vg org app-users (short token flow)', () => {
   it('rejects legacy long-lived app-user sessions without vg auth', testService(async (service, container) => {
     const asAlice = await service.login('alice');
     const { id: actorId } = await container.one(sql`select id from actors where "displayName"='Alice' limit 1`);
-    const project = await container.Projects.getById(1);
+    const project = await container.Projects.getById(1).then((o) => o.get());
 
     const fk = await container.FieldKeys.create(
       FieldKey.fromApi({ displayName: 'legacy-app-user' }).with({ createdBy: actorId }),
@@ -207,7 +207,7 @@ describe('vg org app-users (short token flow)', () => {
     await service.post(`/v1/key/${fk.aux.session.token}/projects/1/forms/simple/submissions`)
       .send(testData.instances.simple.one)
       .set('Content-Type', 'application/xml')
-      .expect(401);
+      .expect(403);
   }));
 
   it('rejects submissions after password change using old token', testService(async (service, container) => {
