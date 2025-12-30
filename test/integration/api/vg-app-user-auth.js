@@ -70,6 +70,18 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.3); });
   }));
 
+  it('should reject login with whitespace-only credentials', testService(async (service) => {
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: '   ', password: STRONG_PASSWORD })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.3); });
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: 'vguser-whitespace', password: '   ' })
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.3); });
+  }));
+
   it('should allow app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
