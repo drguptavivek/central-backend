@@ -19,3 +19,4 @@ This file tracks VG changes made directly to upstream core files.
 
 ## lib/model/query/vg-app-user-auth.js
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
+- When ip is missing, scope lockout status/clears to rows with null ip instead of all IPs.
