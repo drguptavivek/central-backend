@@ -17,7 +17,9 @@ This file tracks VG changes made directly to upstream core files.
 - Normalize whitespace-only phone values to null.
 - When revoking sessions without a projectId, skip audit acteeId and synthesize a field_key actor for session termination.
 - Reject self revoke when the current auth session is missing.
+- Skip duplicate audits when a session is already revoked or an app user is already inactive.
 
 ## lib/model/query/vg-app-user-auth.js
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
 - When ip is missing, scope lockout status/clears to rows with null ip instead of all IPs.
+- Include actor acteeId on session lookup to support audit logging for session revokes.
