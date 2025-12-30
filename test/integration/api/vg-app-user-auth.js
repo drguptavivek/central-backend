@@ -64,6 +64,12 @@ describe('api: vg app-user auth', () => {
       .expect(400);
   }));
 
+  it('should reject login with missing body', testService(async (service) => {
+    await service.post('/v1/projects/1/app-users/login')
+      .expect(400)
+      .then(({ body }) => { body.code.should.equal(400.3); });
+  }));
+
   it('should allow app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
