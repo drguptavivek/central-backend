@@ -86,6 +86,26 @@ CREATE TABLE IF NOT EXISTS vg_project_settings (
   ),
   CONSTRAINT vg_project_settings_unique UNIQUE ("projectId", vg_key_name)
 );
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vg_project_settings_positive_int'
+  ) THEN
+    ALTER TABLE vg_project_settings DROP CONSTRAINT vg_project_settings_positive_int;
+  END IF;
+  ALTER TABLE vg_project_settings
+    ADD CONSTRAINT vg_project_settings_positive_int CHECK (
+      vg_key_name NOT IN (
+        'admin_pw',
+        'vg_app_user_session_ttl_days',
+        'vg_app_user_session_cap',
+        'vg_app_user_lock_max_failures',
+        'vg_app_user_lock_window_minutes',
+        'vg_app_user_lock_duration_minutes'
+      )
+      OR vg_key_value ~ '^[1-9][0-9]*$'
+    );
+END$$;
 
 -- Login attempt log for rate limiting/lockout.
 CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
