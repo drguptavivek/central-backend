@@ -29,7 +29,6 @@ const ensureProjectSettingsConstraint = async (container) => {
     ALTER TABLE vg_project_settings
       ADD CONSTRAINT vg_project_settings_positive_int CHECK (
         vg_key_name NOT IN (
-          'admin_pw',
           'vg_app_user_session_ttl_days',
           'vg_app_user_session_cap',
           'vg_app_user_lock_max_failures',
