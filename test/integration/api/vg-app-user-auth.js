@@ -96,13 +96,14 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.11); });
   }));
 
-  it('should allow app-user patch with missing body', testService(async (service) => {
+  it('should reject app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
 
     await service.login('alice', (asAlice) =>
       asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
-        .expect(200));
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.3); }));
   }));
 
   it('should reject app-user patch with non-string fullName or phone', testService(async (service) => {
