@@ -1000,7 +1000,7 @@ describe('api: vg app-user auth', () => {
     should.exist(expires_at);
   }));
 
-  it('should reject login for a username that belongs to a different project', testService(async (service) => {
+  it('should reject login for a username that belongs to a different project', testService(async (service, container) => {
     const asAlice = await service.login('alice');
     const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'project-login-scope' }).expect(200).then(({ body }) => body);
     await asAlice.post(`/v1/projects/${project2}/app-users`)
@@ -1010,6 +1010,13 @@ describe('api: vg app-user auth', () => {
     await service.post('/v1/projects/1/app-users/login')
       .send({ username: 'vguser-project-scope', password: STRONG_PASSWORD })
       .expect(401);
+
+    const { count } = await container.one(sql`
+      select count(*)::int as count
+      from vg_app_user_login_attempts
+      where username='vguser-project-scope' and succeeded=false
+    `);
+    count.should.equal(1);
   }));
 
   it('should reject admin reset if vg auth record is missing', testService(async (service, container) => {
