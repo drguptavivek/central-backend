@@ -23,6 +23,24 @@ const createAppUser = (service, overrides = {}) => {
       .then(({ body }) => body));
 };
 
+const ensureProjectSettingsConstraint = async (container) => {
+  await container.run(sql`ALTER TABLE vg_project_settings DROP CONSTRAINT IF EXISTS vg_project_settings_positive_int`);
+  await container.run(sql`
+    ALTER TABLE vg_project_settings
+      ADD CONSTRAINT vg_project_settings_positive_int CHECK (
+        vg_key_name NOT IN (
+          'admin_pw',
+          'vg_app_user_session_ttl_days',
+          'vg_app_user_session_cap',
+          'vg_app_user_lock_max_failures',
+          'vg_app_user_lock_window_minutes',
+          'vg_app_user_lock_duration_minutes'
+        )
+        OR vg_key_value ~ '^[1-9][0-9]*$'
+      )
+  `);
+};
+
 describe('api: vg app-user auth', () => {
   it('should create app users without long-lived sessions and issue short tokens on login', testService(async (service, container) => {
     const appUser = await createAppUser(service, { username: 'vguser-login' });
@@ -1170,6 +1188,7 @@ describe('api: vg app-user auth', () => {
   }));
 
   it('should return project app-user settings with admin_pw override', testService(async (service, container) => {
+    await ensureProjectSettingsConstraint(container);
     await container.run(sql`
       INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
       VALUES (1, 'admin_pw', 'project-secret')
@@ -1185,7 +1204,8 @@ describe('api: vg app-user auth', () => {
         }));
   }));
 
-  it('should allow updating project app-user settings admin_pw', testService(async (service) => {
+  it('should allow updating project app-user settings admin_pw', testService(async (service, container) => {
+    await ensureProjectSettingsConstraint(container);
     await service.login('alice', (asAlice) =>
       asAlice.put('/v1/projects/1/app-users/settings')
         .send({ admin_pw: 'project-admin' })
