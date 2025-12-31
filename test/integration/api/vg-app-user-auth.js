@@ -1023,10 +1023,11 @@ describe('api: vg app-user auth', () => {
         .expect(404));
   }));
 
-  it('should allow system settings update with missing body', testService(async (service) => {
+  it('should reject system settings update with missing body', testService(async (service) => {
     await service.login('alice', (asAlice) =>
       asAlice.put('/v1/system/settings')
-        .expect(200));
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.3); }));
   }));
 
   it('should accept numeric strings for session settings updates', testService(async (service) => {
