@@ -1168,4 +1168,41 @@ describe('api: vg app-user auth', () => {
       .send({ admin_pw: 'a'.repeat(73) })
       .expect(400);
   }));
+
+  it('should return project app-user settings with admin_pw override', testService(async (service, container) => {
+    await container.run(sql`
+      INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
+      VALUES (1, 'admin_pw', 'project-secret')
+      ON CONFLICT ("projectId", vg_key_name) DO UPDATE
+        SET vg_key_value = EXCLUDED.vg_key_value
+    `);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.get('/v1/projects/1/app-users/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.admin_pw.should.equal('project-secret');
+        }));
+  }));
+
+  it('should allow updating project app-user settings admin_pw', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.put('/v1/projects/1/app-users/settings')
+        .send({ admin_pw: 'project-admin' })
+        .expect(200));
+
+    await service.login('alice', (asAlice) =>
+      asAlice.get('/v1/projects/1/app-users/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.admin_pw.should.equal('project-admin');
+        }));
+  }));
+
+  it('should reject project admin_pw longer than 72 characters', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.put('/v1/projects/1/app-users/settings')
+        .send({ admin_pw: 'a'.repeat(73) })
+        .expect(400));
+  }));
 });
