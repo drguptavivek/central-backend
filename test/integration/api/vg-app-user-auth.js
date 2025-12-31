@@ -170,8 +170,8 @@ describe('api: vg app-user auth', () => {
         (${username}, '1.1.1.1', false)
     `);
 
-    const nullStatus = await getLockStatus(username, null)(container);
-    const ipStatus = await getLockStatus(username, '1.1.1.1')(container);
+    const nullStatus = await getLockStatus(username, null, 5)(container);
+    const ipStatus = await getLockStatus(username, '1.1.1.1', 5)(container);
 
     Number(nullStatus.recent_failures).should.equal(1);
     Number(ipStatus.recent_failures).should.equal(2);
@@ -203,6 +203,31 @@ describe('api: vg app-user auth', () => {
     await service.post('/v1/projects/1/app-users/login')
       .send({ username, password: STRONG_PASSWORD })
       .expect(200);
+  }));
+
+  it('should honor project-level lockout settings', testService(async (service, container) => {
+    const username = 'vguser-lockout-project';
+    await createAppUser(service, { username });
+
+    await container.run(sql`
+      INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
+      VALUES
+        (1, 'vg_app_user_lock_max_failures', '2'),
+        (1, 'vg_app_user_lock_window_minutes', '5'),
+        (1, 'vg_app_user_lock_duration_minutes', '15')
+      ON CONFLICT ("projectId", vg_key_name) DO UPDATE
+        SET vg_key_value = EXCLUDED.vg_key_value
+    `);
+
+    for (let i = 0; i < 2; i += 1) {
+      await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: 'WrongPass!1' })
+        .expect(401);
+    }
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
   }));
 
   it('should reject lockout clear with missing body', testService(async (service) => {
@@ -426,7 +451,33 @@ describe('api: vg app-user auth', () => {
     `);
   }));
 
-  it('should lift lockout after the lock window expires', testService(async (service, container) => {
+  it('should keep lockout active after failures age out', testService(async (service, container) => {
+    const username = 'vguser-lock-active';
+    await createAppUser(service, { username });
+
+    for (let i = 0; i < 5; i += 1) {
+      await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: 'WrongPass!1' })
+        .expect(401);
+    }
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
+
+    // Age out attempts beyond the window; lockout should still apply.
+    await container.run(sql`
+      update vg_app_user_login_attempts
+        set "createdAt" = now() - interval '11 minutes'
+      where username=${username}
+    `);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(401);
+  }));
+
+  it('should lift lockout after the lock duration expires', testService(async (service, container) => {
     const username = 'vguser-lock-expire';
     await createAppUser(service, { username });
 
@@ -440,10 +491,9 @@ describe('api: vg app-user auth', () => {
       .send({ username, password: STRONG_PASSWORD })
       .expect(401);
 
-    // Age out attempts beyond 10 minutes to simulate lock duration expiry.
     await container.run(sql`
-      update vg_app_user_login_attempts
-        set "createdAt" = now() - interval '11 minutes'
+      update vg_app_user_lockouts
+        set locked_until = now() - interval '1 minute'
       where username=${username}
     `);
 
