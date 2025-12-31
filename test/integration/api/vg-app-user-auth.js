@@ -210,6 +210,14 @@ describe('api: vg app-user auth', () => {
         .expect(400));
   }));
 
+  it('should reject lockout clear with non-string ip', testService(async (service) => {
+    await service.login('alice', (asAlice) =>
+      asAlice.post('/v1/system/app-users/lockouts/clear')
+        .send({ username: 'vguser-lockout-clear', ip: 123 })
+        .expect(400)
+        .then(({ body }) => { body.code.should.equal(400.11); }));
+  }));
+
   it('should reject activate/deactivate with missing body', testService(async (service) => {
     const username = 'vguser-active-missing';
     const appUser = await createAppUser(service, { username });
