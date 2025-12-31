@@ -931,6 +931,47 @@ describe('api: vg app-user auth', () => {
     secondRevoke.should.equal(1);
   }));
 
+  it('should avoid audit logs on no-op activate/deactivate', testService(async (service, container) => {
+    const username = 'vguser-active-idempotent';
+    const appUser = await createAppUser(service, { username });
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .send({ active: true })
+        .expect(200));
+
+    const { count: activateCount } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.activate'
+        and details->>'username'=${username}
+    `);
+    activateCount.should.equal(0);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .send({ active: false })
+        .expect(200));
+
+    const { count: firstDeactivate } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.deactivate'
+        and details->>'username'=${username}
+    `);
+    firstDeactivate.should.equal(1);
+
+    await service.login('alice', (asAlice) =>
+      asAlice.post(`/v1/projects/1/app-users/${appUser.id}/active`)
+        .send({ active: false })
+        .expect(200));
+
+    const { count: secondDeactivate } = await container.one(sql`
+      select count(*)::int as count from audits
+      where action='vg.app_user.deactivate'
+        and details->>'username'=${username}
+    `);
+    secondDeactivate.should.equal(1);
+  }));
+
   it('should allow admin session revoke after field key deletion', testService(async (service, container) => {
     const username = 'vguser-orphan-session';
     const appUser = await createAppUser(service, { username });
