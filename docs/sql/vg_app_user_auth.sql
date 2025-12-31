@@ -20,7 +20,13 @@ CREATE TABLE IF NOT EXISTS vg_settings (
   vg_key_name text NOT NULL UNIQUE,
   vg_key_value text NOT NULL,
   CONSTRAINT vg_settings_positive_int CHECK (
-    vg_key_name NOT IN ('vg_app_user_session_ttl_days', 'vg_app_user_session_cap')
+    vg_key_name NOT IN (
+      'vg_app_user_session_ttl_days',
+      'vg_app_user_session_cap',
+      'vg_app_user_lock_max_failures',
+      'vg_app_user_lock_window_minutes',
+      'vg_app_user_lock_duration_minutes'
+    )
     OR vg_key_value ~ '^[1-9][0-9]*$'
   )
 );
@@ -31,7 +37,13 @@ BEGIN
   ) THEN
     ALTER TABLE vg_settings
       ADD CONSTRAINT vg_settings_positive_int CHECK (
-        vg_key_name NOT IN ('vg_app_user_session_ttl_days', 'vg_app_user_session_cap')
+        vg_key_name NOT IN (
+          'vg_app_user_session_ttl_days',
+          'vg_app_user_session_cap',
+          'vg_app_user_lock_max_failures',
+          'vg_app_user_lock_window_minutes',
+          'vg_app_user_lock_duration_minutes'
+        )
         OR vg_key_value ~ '^[1-9][0-9]*$'
       );
   END IF;
@@ -43,8 +55,34 @@ INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_app_user_session_cap', '3')
   ON CONFLICT (vg_key_name) DO NOTHING;
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_app_user_lock_max_failures', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_app_user_lock_window_minutes', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_app_user_lock_duration_minutes', '10')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('admin_pw', 'vg_custom')
   ON CONFLICT (vg_key_name) DO NOTHING;
+
+-- Project-scoped overrides for vg settings.
+CREATE TABLE IF NOT EXISTS vg_project_settings (
+  id bigserial PRIMARY KEY,
+  "projectId" integer NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  vg_key_name text NOT NULL,
+  vg_key_value text NOT NULL,
+  CONSTRAINT vg_project_settings_positive_int CHECK (
+    vg_key_name NOT IN (
+      'vg_app_user_lock_max_failures',
+      'vg_app_user_lock_window_minutes',
+      'vg_app_user_lock_duration_minutes'
+    )
+    OR vg_key_value ~ '^[1-9][0-9]*$'
+  ),
+  CONSTRAINT vg_project_settings_unique UNIQUE ("projectId", vg_key_name)
+);
 
 -- Login attempt log for rate limiting/lockout.
 CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
@@ -56,6 +94,17 @@ CREATE TABLE IF NOT EXISTS vg_app_user_login_attempts (
 );
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_user_createdat ON vg_app_user_login_attempts (username, "createdAt" DESC);
 CREATE INDEX IF NOT EXISTS idx_vg_login_attempts_ip_createdat ON vg_app_user_login_attempts (ip, "createdAt" DESC);
+
+-- Lockout state tracking.
+CREATE TABLE IF NOT EXISTS vg_app_user_lockouts (
+  id bigserial PRIMARY KEY,
+  username text NOT NULL,
+  ip text,
+  locked_until timestamptz NOT NULL,
+  "createdAt" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vg_login_lockouts_user_createdat ON vg_app_user_lockouts (username, "createdAt" DESC);
+CREATE INDEX IF NOT EXISTS idx_vg_login_lockouts_ip_createdat ON vg_app_user_lockouts (ip, "createdAt" DESC);
 
 -- App-user session metadata (IP/device tracking).
 CREATE TABLE IF NOT EXISTS vg_app_user_sessions (
