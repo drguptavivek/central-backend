@@ -1005,4 +1005,11 @@ describe('api: vg app-user auth', () => {
         .expect(400);
     }
   }));
+
+  it('should reject admin_pw longer than 72 characters', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    await asAlice.put('/v1/system/settings')
+      .send({ admin_pw: 'a'.repeat(73) })
+      .expect(400);
+  }));
 });
