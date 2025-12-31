@@ -346,6 +346,54 @@ describe('api: vg app-user auth', () => {
     `);
   }));
 
+  it('should honor project-level session TTL override', testService(async (service, container) => {
+    const username = 'vguser-ttl-project';
+    const appUser = await createAppUser(service, { username });
+
+    await container.run(sql`
+      INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
+      VALUES (1, 'vg_app_user_session_ttl_days', '1')
+      ON CONFLICT ("projectId", vg_key_name) DO UPDATE
+        SET vg_key_value = EXCLUDED.vg_key_value
+    `);
+
+    const login = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then((res) => res.body);
+
+    const { expiresAt, createdAt } = await container.one(sql`
+      select "expiresAt", "createdAt" from sessions where token=${login.token}
+    `);
+    const diffHours = (new Date(expiresAt) - new Date(createdAt)) / (60 * 60 * 1000);
+    diffHours.should.be.approximately(24, 1);
+  }));
+
+  it('should honor project-level session cap override', testService(async (service, container) => {
+    const username = 'vguser-cap-project';
+    const appUser = await createAppUser(service, { username });
+
+    await container.run(sql`
+      INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
+      VALUES (1, 'vg_app_user_session_cap', '1')
+      ON CONFLICT ("projectId", vg_key_name) DO UPDATE
+        SET vg_key_value = EXCLUDED.vg_key_value
+    `);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200);
+
+    const { count } = await container.one(sql`
+      select count(*)::int as count from sessions where "actorId"=${appUser.id}
+    `);
+    count.should.equal(1);
+  }));
+
   it('should log audit events for create, login success/failure, password ops, revoke, deactivate', testService(async (service, container) => {
     const username = 'vguser-audit';
     const appUser = await createAppUser(service, { username });
