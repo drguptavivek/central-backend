@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS vg_project_settings (
   vg_key_value text NOT NULL,
   CONSTRAINT vg_project_settings_positive_int CHECK (
     vg_key_name NOT IN (
+      'vg_app_user_session_ttl_days',
+      'vg_app_user_session_cap',
       'vg_app_user_lock_max_failures',
       'vg_app_user_lock_window_minutes',
       'vg_app_user_lock_duration_minutes'
