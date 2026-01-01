@@ -388,4 +388,3 @@ describe('api: /sessions', () => {
           .expect(200))));
   });
 });
-
