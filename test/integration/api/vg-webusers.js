@@ -45,6 +45,30 @@ describe('api: /sessions (vg web users)', () => {
     lockout.details.durationMinutes.should.equal(10);
   }));
 
+  it('should honor a configured lockout duration', testService(async (service, container) => {
+    await container.VgAppUserAuth.upsertSetting('vg_web_user_lock_duration_minutes', '2');
+
+    for (let i = 0; i < 5; i += 1) {
+      await service.post('/v1/sessions')
+        .send({ email: 'webuser-lockout-config@getodk.org', password: 'wrong-password' })
+        .expect(401);
+    }
+
+    await service.post('/v1/sessions')
+      .send({ email: 'webuser-lockout-config@getodk.org', password: 'wrong-password' })
+      .expect(401);
+
+    const lockout = await container.one(sql`
+      select details from audits
+      where action='user.session.lockout'
+        and details->>'email'='webuser-lockout-config@getodk.org'
+      order by "loggedAt" desc, id desc
+      limit 1
+    `);
+
+    lockout.details.durationMinutes.should.equal(2);
+  }));
+
   it('should normalize response timing between missing email and bad password', testService(async (service) => {
     const invalidEmailPromise = service.post('/v1/sessions')
       .send({ email: 'missing-user@example.com', password: 'wrong-password' });
