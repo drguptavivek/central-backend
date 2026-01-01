@@ -69,6 +69,14 @@ describe('api: /sessions (vg web users)', () => {
     lockout.details.durationMinutes.should.equal(2);
   }));
 
+  it('should include attempts remaining header on failed login', testService(async (service) => {
+    const response = await service.post('/v1/sessions')
+      .send({ email: 'webuser-attempts-remaining@getodk.org', password: 'wrong-password' })
+      .expect(401);
+
+    response.headers['x-login-attempts-remaining'].should.equal('4');
+  }));
+
   it('should include Retry-After header when locked out', testService(async (service, container) => {
     await container.VgAppUserAuth.upsertSetting('vg_web_user_lock_duration_minutes', '1');
 
