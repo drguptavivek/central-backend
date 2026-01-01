@@ -69,6 +69,25 @@ describe('api: /sessions (vg web users)', () => {
     lockout.details.durationMinutes.should.equal(2);
   }));
 
+  it('should include Retry-After header when locked out', testService(async (service, container) => {
+    await container.VgAppUserAuth.upsertSetting('vg_web_user_lock_duration_minutes', '1');
+
+    for (let i = 0; i < 5; i += 1) {
+      await service.post('/v1/sessions')
+        .send({ email: 'webuser-retry-after@getodk.org', password: 'wrong-password' })
+        .expect(401);
+    }
+
+    const response = await service.post('/v1/sessions')
+      .send({ email: 'webuser-retry-after@getodk.org', password: 'wrong-password' })
+      .expect(401);
+
+    const retryAfter = Number(response.headers['retry-after']);
+    Number.isFinite(retryAfter).should.equal(true);
+    retryAfter.should.be.above(0);
+    retryAfter.should.be.belowOrEqual(60);
+  }));
+
   it('should normalize response timing between missing email and bad password', testService(async (service) => {
     const invalidEmailPromise = service.post('/v1/sessions')
       .send({ email: 'missing-user@example.com', password: 'wrong-password' });
