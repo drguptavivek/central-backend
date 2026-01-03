@@ -29,7 +29,7 @@
     },
     "enketo": {
       "url": "http://enketo:8005/-",
-      "apiKey": "cRliFU6qVD0NyXaVd52BkdFdS7kvGcvWgBnM0IFBkksmzawz7HGPwghcJN5AADQq6oBeGFfgqE0q92kxBTAX5ZaQw9HtFYTWtKFHmAMuBp419BtxPjA9sYaXENhOdqUV"
+      "apiKey": ""
     },
     "env": {
       "domain": "https://central.local",
