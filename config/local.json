@@ -48,13 +48,7 @@
         "project": "1298632",
         "traceRate": "0.1"
       },
-      "s3blobStore": {
-        "server": "",
-        "accessKey": "",
-        "secretKey": "",
-        "bucketName": "",
-        "requestTimeout": 60000
-      }
+      "s3blobStore": {}
     }
   }
 }
