@@ -26,7 +26,10 @@ module.exports = async ({ run }) => {
           'vg_app_user_session_cap',
           'vg_app_user_lock_max_failures',
           'vg_app_user_lock_window_minutes',
-          'vg_app_user_lock_duration_minutes'
+          'vg_app_user_lock_duration_minutes',
+          'vg_app_user_ip_max_failures',
+          'vg_app_user_ip_window_minutes',
+          'vg_app_user_ip_lock_duration_minutes'
         )
         OR vg_key_value ~ '^[1-9][0-9]*$'
       )
@@ -57,6 +60,21 @@ module.exports = async ({ run }) => {
     VALUES ('vg_app_user_lock_duration_minutes', '10')
     ON CONFLICT (vg_key_name) DO NOTHING
   `);
+  await run(sql`
+    INSERT INTO vg_settings (vg_key_name, vg_key_value)
+    VALUES ('vg_app_user_ip_max_failures', '20')
+    ON CONFLICT (vg_key_name) DO NOTHING
+  `);
+  await run(sql`
+    INSERT INTO vg_settings (vg_key_name, vg_key_value)
+    VALUES ('vg_app_user_ip_window_minutes', '15')
+    ON CONFLICT (vg_key_name) DO NOTHING
+  `);
+  await run(sql`
+    INSERT INTO vg_settings (vg_key_name, vg_key_value)
+    VALUES ('vg_app_user_ip_lock_duration_minutes', '30')
+    ON CONFLICT (vg_key_name) DO NOTHING
+  `);
 
   await run(sql`
     CREATE TABLE IF NOT EXISTS vg_project_settings (
@@ -70,7 +88,10 @@ module.exports = async ({ run }) => {
           'vg_app_user_session_cap',
           'vg_app_user_lock_max_failures',
           'vg_app_user_lock_window_minutes',
-          'vg_app_user_lock_duration_minutes'
+          'vg_app_user_lock_duration_minutes',
+          'vg_app_user_ip_max_failures',
+          'vg_app_user_ip_window_minutes',
+          'vg_app_user_ip_lock_duration_minutes'
         )
         OR vg_key_value ~ '^[1-9][0-9]*$'
       ),
@@ -86,7 +107,10 @@ module.exports = async ({ run }) => {
           'vg_app_user_session_cap',
           'vg_app_user_lock_max_failures',
           'vg_app_user_lock_window_minutes',
-          'vg_app_user_lock_duration_minutes'
+          'vg_app_user_lock_duration_minutes',
+          'vg_app_user_ip_max_failures',
+          'vg_app_user_ip_window_minutes',
+          'vg_app_user_ip_lock_duration_minutes'
         )
         OR vg_key_value ~ '^[1-9][0-9]*$'
       )

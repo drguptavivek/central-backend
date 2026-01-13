@@ -1224,4 +1224,139 @@ describe('api: vg app-user auth', () => {
         .send({ admin_pw: 'a'.repeat(73) })
         .expect(400));
   }));
+
+  // IP Rate Limiting Settings Tests
+  describe('IP rate limiting settings', () => {
+    it('should return system settings with IP rate limiting defaults', testService(async (service) => {
+      await service.login('alice', (asAlice) =>
+        asAlice.get('/v1/system/settings')
+          .expect(200)
+          .then(({ body }) => {
+            body.should.have.property('vg_app_user_ip_max_failures');
+            body.vg_app_user_ip_max_failures.should.equal(20);
+            body.should.have.property('vg_app_user_ip_window_minutes');
+            body.vg_app_user_ip_window_minutes.should.equal(15);
+            body.should.have.property('vg_app_user_ip_lock_duration_minutes');
+            body.vg_app_user_ip_lock_duration_minutes.should.equal(30);
+          }));
+    }));
+
+    it('should allow updating IP rate limiting settings', testService(async (service) => {
+      const asAlice = await service.login('alice');
+      await asAlice.put('/v1/system/settings')
+        .send({
+          vg_app_user_ip_max_failures: 10,
+          vg_app_user_ip_window_minutes: 20,
+          vg_app_user_ip_lock_duration_minutes: 60
+        })
+        .expect(200);
+
+      await asAlice.get('/v1/system/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.vg_app_user_ip_max_failures.should.equal(10);
+          body.vg_app_user_ip_window_minutes.should.equal(20);
+          body.vg_app_user_ip_lock_duration_minutes.should.equal(60);
+        });
+    }));
+
+    it('should validate IP rate limiting settings are positive integers', testService(async (service) => {
+      const asAlice = await service.login('alice');
+      const cases = [
+        { vg_app_user_ip_max_failures: 0 },
+        { vg_app_user_ip_max_failures: -1 },
+        { vg_app_user_ip_max_failures: 'abc' },
+        { vg_app_user_ip_max_failures: '20.5' },
+        { vg_app_user_ip_window_minutes: 0 },
+        { vg_app_user_ip_window_minutes: -5 },
+        { vg_app_user_ip_window_minutes: 'nope' },
+        { vg_app_user_ip_window_minutes: '15.5' },
+        { vg_app_user_ip_lock_duration_minutes: 0 },
+        { vg_app_user_ip_lock_duration_minutes: -10 },
+        { vg_app_user_ip_lock_duration_minutes: 'bad' },
+        { vg_app_user_ip_lock_duration_minutes: '30.5' }
+      ];
+
+      for (const body of cases) {
+        await asAlice.put('/v1/system/settings')
+          .send(body)
+          .expect(400);
+      }
+    }));
+
+    it('should accept numeric strings for IP rate limiting settings', testService(async (service) => {
+      const asAlice = await service.login('alice');
+      await asAlice.put('/v1/system/settings')
+        .send({
+          vg_app_user_ip_max_failures: '25',
+          vg_app_user_ip_window_minutes: '10',
+          vg_app_user_ip_lock_duration_minutes: '45'
+        })
+        .expect(200);
+    }));
+
+    it('should return project settings with IP rate limiting defaults', testService(async (service) => {
+      await service.login('alice', (asAlice) =>
+        asAlice.get('/v1/projects/1/app-users/settings')
+          .expect(200)
+          .then(({ body }) => {
+            body.should.have.property('vg_app_user_ip_max_failures');
+            body.vg_app_user_ip_max_failures.should.equal(20);
+            body.should.have.property('vg_app_user_ip_window_minutes');
+            body.vg_app_user_ip_window_minutes.should.equal(15);
+            body.should.have.property('vg_app_user_ip_lock_duration_minutes');
+            body.vg_app_user_ip_lock_duration_minutes.should.equal(30);
+          }));
+    }));
+
+    it('should allow updating project IP rate limiting settings', testService(async (service, container) => {
+      await ensureProjectSettingsConstraint(container);
+      const asAlice = await service.login('alice');
+
+      await asAlice.put('/v1/projects/1/app-users/settings')
+        .send({
+          vg_app_user_ip_max_failures: 15,
+          vg_app_user_ip_window_minutes: 10,
+          vg_app_user_ip_lock_duration_minutes: 20
+        })
+        .expect(200);
+
+      await asAlice.get('/v1/projects/1/app-users/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.vg_app_user_ip_max_failures.should.equal(15);
+          body.vg_app_user_ip_window_minutes.should.equal(10);
+          body.vg_app_user_ip_lock_duration_minutes.should.equal(20);
+        });
+    }));
+
+    it('should honor project-level IP rate limiting settings override', testService(async (service, container) => {
+      await ensureProjectSettingsConstraint(container);
+      const asAlice = await service.login('alice');
+
+      // Set system defaults
+      await asAlice.put('/v1/system/settings')
+        .send({ vg_app_user_ip_max_failures: 20 })
+        .expect(200);
+
+      // Override at project level
+      await asAlice.put('/v1/projects/1/app-users/settings')
+        .send({ vg_app_user_ip_max_failures: 5 })
+        .expect(200);
+
+      // Project should use its override
+      await asAlice.get('/v1/projects/1/app-users/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.vg_app_user_ip_max_failures.should.equal(5);
+        });
+
+      // System should still show default
+      await asAlice.get('/v1/system/settings')
+        .expect(200)
+        .then(({ body }) => {
+          body.vg_app_user_ip_max_failures.should.equal(20);
+        });
+    }));
+  });
 });
