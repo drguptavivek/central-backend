@@ -171,11 +171,13 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Create 10 old failures (outside 15-minute window)
       for (const minutes of [16, 17, 18, 19, 20, 21, 22, 23, 24, 25]) {
+        // Create timestamp in the past
+        const pastTime = new Date(Date.now() - (minutes * 60 * 1000));
         await container.run(sql`
           insert into audits (action, "loggedAt", details)
           values (
             'user.session.create.failure',
-            now() - (${minutes} * interval '1 minute'),
+            ${pastTime},
             jsonb_build_object('email', 'test@test.com', 'ip', ${ip}, 'userAgent', 'test')
           )
         `);
@@ -248,8 +250,8 @@ describe('api: vg web user IP rate limiting', () => {
     }));
 
     it('should track different IPs independently', testService(async (service) => {
-      // IP1: 20 failed attempts → IP locked
-      for (let i = 0; i < 20; i += 1) {
+      // IP1: 21 failed attempts → IP locked (locks on 21st)
+      for (let i = 0; i < 21; i += 1) {
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', '8.8.8.8')
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
