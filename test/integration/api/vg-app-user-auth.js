@@ -1359,4 +1359,141 @@ describe('api: vg app-user auth', () => {
         });
     }));
   });
+
+  // Security Tests for Settings Endpoints
+  describe('Settings endpoints security', () => {
+    it('should forbid app user from accessing system settings', testService(async (service) => {
+      const appUser = await createAppUser(service, { username: 'vguser-settings-security' });
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-settings-security', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // App user should not be able to access system settings
+      await service.get('/v1/system/settings')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+    }));
+
+    it('should forbid app user from updating system settings', testService(async (service) => {
+      const appUser = await createAppUser(service, { username: 'vguser-settings-security-2' });
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-settings-security-2', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // App user should not be able to update system settings
+      await service.put('/v1/system/settings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ vg_app_user_session_ttl_days: 5 })
+        .expect(403);
+    }));
+
+    it('should forbid user without project.read from accessing project settings', testService(async (service) => {
+      // Create a user that exists but has no specific permissions on the project
+      const appUser = await createAppUser(service, { username: 'vguser-no-perm' });
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-no-perm', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // App user token should not grant access to project settings without proper permission
+      await service.get('/v1/projects/1/app-users/settings')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+    }));
+
+    it('should forbid user without project.update from updating project settings', testService(async (service) => {
+      const appUser = await createAppUser(service, { username: 'vguser-no-perm-2' });
+      const { token } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-no-perm-2', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // App user token should not grant ability to update project settings
+      await service.put('/v1/projects/1/app-users/settings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ vg_app_user_session_ttl_days: 5 })
+        .expect(403);
+    }));
+
+    it('should forbid app user from Project A accessing Project B settings', testService(async (service) => {
+      // Create app user in Project 1
+      const appUserA = await createAppUser(service, { username: 'vguser-project-a' });
+      const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-project-a', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // Create Project 2 via API (to properly set acteeId)
+      const projectB = await service.login('alice', (asAlice) =>
+        asAlice.post('/v1/projects')
+          .send({ name: 'Project Two' })
+          .expect(200)
+          .then(({ body }) => body));
+
+      // App user from Project A should not be able to access Project B settings
+      await service.get(`/v1/projects/${projectB.id}/app-users/settings`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .expect(403);
+    }));
+
+    it('should forbid app user from Project A updating Project B settings', testService(async (service) => {
+      // Create app user in Project 1
+      const appUserA = await createAppUser(service, { username: 'vguser-project-a-2' });
+      const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
+        .send({ username: 'vguser-project-a-2', password: STRONG_PASSWORD })
+        .expect(200)
+        .then((res) => res.body);
+
+      // Create Project 2 via API (to properly set acteeId)
+      const projectB = await service.login('alice', (asAlice) =>
+        asAlice.post('/v1/projects')
+          .send({ name: 'Project Two' })
+          .expect(200)
+          .then(({ body }) => body));
+
+      // App user from Project A should not be able to update Project B settings
+      await service.put(`/v1/projects/${projectB.id}/app-users/settings`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ vg_app_user_session_ttl_days: 5 })
+        .expect(403);
+    }));
+
+    it('should allow admin to access system settings', testService(async (service) => {
+      // Verify admin CAN access system settings (control test)
+      await service.login('alice', (asAlice) =>
+        asAlice.get('/v1/system/settings')
+          .expect(200)
+          .then(({ body }) => {
+            body.should.have.property('vg_app_user_session_ttl_days');
+          }));
+    }));
+
+    it('should allow admin to update system settings', testService(async (service) => {
+      // Verify admin CAN update system settings (control test)
+      await service.login('alice', (asAlice) =>
+        asAlice.put('/v1/system/settings')
+          .send({ vg_app_user_ip_max_failures: 25 })
+          .expect(200));
+    }));
+
+    it('should allow admin to access project settings', testService(async (service) => {
+      // Verify admin CAN access project settings (control test)
+      await service.login('alice', (asAlice) =>
+        asAlice.get('/v1/projects/1/app-users/settings')
+          .expect(200)
+          .then(({ body }) => {
+            body.should.have.property('vg_app_user_session_ttl_days');
+          }));
+    }));
+
+    it('should allow admin to update project settings', testService(async (service) => {
+      // Verify admin CAN update project settings (control test)
+      await service.login('alice', (asAlice) =>
+        asAlice.put('/v1/projects/1/app-users/settings')
+          .send({ vg_app_user_ip_max_failures: 15 })
+          .expect(200));
+    }));
+  });
 });
