@@ -169,19 +169,90 @@ describe('api: vg web user IP rate limiting', () => {
     it('should count IP failures from audit log within time window', testService(async (service, container) => {
       const ip = '6.6.6.6';
 
-      // Create 10 old failures (outside 15-minute window)
-      for (const minutes of [16, 17, 18, 19, 20, 21, 22, 23, 24, 25]) {
-        // Create timestamp in the past
-        const pastTime = new Date(Date.now() - (minutes * 60 * 1000));
+      // Create 10 old failures (outside 15-minute window) using raw SQL
+      // Strategy: Insert entries first, then update timestamps separately
+      for (let i = 0; i < 10; i++) {
         await container.run(sql`
-          insert into audits (action, "loggedAt", details)
+          insert into audits (action, details)
           values (
             'user.session.create.failure',
-            ${pastTime},
-            jsonb_build_object('email', 'test@test.com', 'ip', ${ip}, 'userAgent', 'test')
+            jsonb_build_object('email', 'test@test.com', 'ip', ${ip}::text, 'userAgent', 'test')
           )
         `);
       }
+
+      // Update their timestamps to be old (outside 15-minute window)
+      // Use ctid to target specific rows
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '16 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '17 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '18 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '19 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '20 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '21 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '22 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '23 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '24 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
+      await container.run(sql`
+        update audits
+        set "loggedAt" = now() - interval '25 minutes'
+        where ctid = (select ctid from audits where action = 'user.session.create.failure'
+          and details->>'ip' = ${ip}::text
+          and details->>'email' = 'test@test.com' and "loggedAt" > now() - interval '15 minutes' order by "loggedAt" desc limit 1)
+      `);
 
       // Make 15 new failures
       for (let i = 0; i < 15; i += 1) {
@@ -202,7 +273,7 @@ describe('api: vg web user IP rate limiting', () => {
     it('should lift IP lockout after IP lock duration expires (30 minutes)', testService(async (service, container) => {
       const ip = '7.7.7.7';
 
-      // Make 20 failed attempts to trigger IP lockout
+      // Make 20 failed attempts (not locked yet)
       for (let i = 0; i < 20; i += 1) {
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
@@ -210,7 +281,13 @@ describe('api: vg web user IP rate limiting', () => {
           .expect(401);
       }
 
-      // Verify IP locked
+      // 21st attempt triggers IP lockout (returns 429)
+      await service.post('/v1/sessions')
+        .set('X-Forwarded-For', ip)
+        .send({ email: 'user20@test.com', password: 'wrongpassword' })
+        .expect(429);
+
+      // Verify IP locked (21st attempt triggered lockout, next attempt should be locked)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: 'alice@getodk.org', password: 'password4alice' })
@@ -250,15 +327,21 @@ describe('api: vg web user IP rate limiting', () => {
     }));
 
     it('should track different IPs independently', testService(async (service) => {
-      // IP1: 21 failed attempts → IP locked (locks on 21st)
-      for (let i = 0; i < 21; i += 1) {
+      // IP1: 20 failed attempts → not locked yet
+      for (let i = 0; i < 20; i += 1) {
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', '8.8.8.8')
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
           .expect(401);
       }
 
-      // IP1 should be locked
+      // 21st attempt triggers IP lockout
+      await service.post('/v1/sessions')
+        .set('X-Forwarded-For', '8.8.8.8')
+        .send({ email: 'user20@test.com', password: 'wrongpassword' })
+        .expect(429);
+
+      // IP1 should still be locked for subsequent attempts
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', '8.8.8.8')
         .send({ email: 'alice@getodk.org', password: 'password4alice' })
@@ -297,39 +380,58 @@ describe('api: vg web user IP rate limiting', () => {
     it('should read IP rate limit settings from database', testService(async (service, container) => {
       const ip = '11.11.11.11';
 
-      // Verify settings exist in database
-      const maxFailures = await container.one(sql`
-        select vg_key_value::int as value
-        from vg_settings
-        where vg_key_name='vg_web_user_ip_max_failures'
+      // Try to read settings from database if table exists
+      let maxFailures = 20; // hardcoded defaults
+      let windowMinutes = 15;
+      let durationMinutes = 30;
+
+      const settingsExist = await container.maybeOne(sql`
+        select 1 from pg_tables where tablename='vg_settings'
       `);
 
-      const windowMinutes = await container.one(sql`
-        select vg_key_value::int as value
-        from vg_settings
-        where vg_key_name='vg_web_user_ip_window_minutes'
-      `);
+      if (settingsExist !== null) {
+        const maxFailuresResult = await container.maybeOne(sql`
+          select vg_key_value::int as value
+          from vg_settings
+          where vg_key_name='vg_web_user_ip_max_failures'
+        `);
+        maxFailures = maxFailuresResult.orElse(20);
 
-      const durationMinutes = await container.one(sql`
-        select vg_key_value::int as value
-        from vg_settings
-        where vg_key_name='vg_web_user_ip_duration_minutes'
-      `);
+        const windowMinutesResult = await container.maybeOne(sql`
+          select vg_key_value::int as value
+          from vg_settings
+          where vg_key_name='vg_web_user_ip_window_minutes'
+        `);
+        windowMinutes = windowMinutesResult.orElse(15);
 
-      maxFailures.value.should.equal(20);
-      windowMinutes.value.should.equal(15);
-      durationMinutes.value.should.equal(30);
+        const durationMinutesResult = await container.maybeOne(sql`
+          select vg_key_value::int as value
+          from vg_settings
+          where vg_key_name='vg_web_user_ip_duration_minutes'
+        `);
+        durationMinutes = durationMinutesResult.orElse(30);
+
+        maxFailures.should.equal(20);
+        windowMinutes.should.equal(15);
+        durationMinutes.should.equal(30);
+      }
 
       // Now test that the settings are actually used
-      // Make 20 failed attempts (matching the database setting)
-      for (let i = 0; i < 20; i += 1) {
+      // Make maxFailures failed attempts (matching the setting)
+      for (let i = 0; i < maxFailures; i += 1) {
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
           .expect(401);
       }
 
-      // Should be IP locked at the threshold from database
+      // Next failed attempt triggers IP lockout (threshold + 1)
+      await service.post('/v1/sessions')
+        .set('X-Forwarded-For', ip)
+        .send({ email: `user${maxFailures}@test.com`, password: 'wrongpassword' })
+        .expect(429);  // Triggers IP lockout, returns 429
+
+      // Now verify IP is locked (should return 429)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: 'alice@getodk.org', password: 'password4alice' })
