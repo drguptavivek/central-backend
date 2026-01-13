@@ -25,7 +25,13 @@ CREATE TABLE IF NOT EXISTS vg_settings (
       'vg_app_user_session_cap',
       'vg_app_user_lock_max_failures',
       'vg_app_user_lock_window_minutes',
-      'vg_app_user_lock_duration_minutes'
+      'vg_app_user_lock_duration_minutes',
+      'vg_web_user_lock_max_failures',
+      'vg_web_user_lock_window_minutes',
+      'vg_web_user_lock_duration_minutes',
+      'vg_web_user_ip_max_failures',
+      'vg_web_user_ip_window_minutes',
+      'vg_web_user_ip_duration_minutes'
     )
     OR vg_key_value ~ '^[1-9][0-9]*$'
   )
@@ -42,7 +48,13 @@ BEGIN
           'vg_app_user_session_cap',
           'vg_app_user_lock_max_failures',
           'vg_app_user_lock_window_minutes',
-          'vg_app_user_lock_duration_minutes'
+          'vg_app_user_lock_duration_minutes',
+          'vg_web_user_lock_max_failures',
+          'vg_web_user_lock_window_minutes',
+          'vg_web_user_lock_duration_minutes',
+          'vg_web_user_ip_max_failures',
+          'vg_web_user_ip_window_minutes',
+          'vg_web_user_ip_duration_minutes'
         )
         OR vg_key_value ~ '^[1-9][0-9]*$'
       );
@@ -63,6 +75,29 @@ INSERT INTO vg_settings (vg_key_name, vg_key_value)
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_app_user_lock_duration_minutes', '10')
   ON CONFLICT (vg_key_name) DO NOTHING;
+
+-- Web user lockout settings (separate from app-user lockouts)
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_lock_max_failures', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_lock_window_minutes', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_lock_duration_minutes', '10')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+
+-- Web user IP-based rate limiting settings (prevents username enumeration attacks)
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_ip_max_failures', '20')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_ip_window_minutes', '15')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_ip_duration_minutes', '30')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('admin_pw', 'vg_custom')
   ON CONFLICT (vg_key_name) DO NOTHING;
@@ -79,7 +114,13 @@ CREATE TABLE IF NOT EXISTS vg_project_settings (
       'vg_app_user_session_cap',
       'vg_app_user_lock_max_failures',
       'vg_app_user_lock_window_minutes',
-      'vg_app_user_lock_duration_minutes'
+      'vg_app_user_lock_duration_minutes',
+      'vg_web_user_lock_max_failures',
+      'vg_web_user_lock_window_minutes',
+      'vg_web_user_lock_duration_minutes',
+      'vg_web_user_ip_max_failures',
+      'vg_web_user_ip_window_minutes',
+      'vg_web_user_ip_duration_minutes'
     )
     OR vg_key_value ~ '^[1-9][0-9]*$'
   ),
@@ -99,7 +140,13 @@ BEGIN
         'vg_app_user_session_cap',
         'vg_app_user_lock_max_failures',
         'vg_app_user_lock_window_minutes',
-        'vg_app_user_lock_duration_minutes'
+        'vg_app_user_lock_duration_minutes',
+        'vg_web_user_lock_max_failures',
+        'vg_web_user_lock_window_minutes',
+        'vg_web_user_lock_duration_minutes',
+        'vg_web_user_ip_max_failures',
+        'vg_web_user_ip_window_minutes',
+        'vg_web_user_ip_duration_minutes'
       )
       OR vg_key_value ~ '^[1-9][0-9]*$'
     );
