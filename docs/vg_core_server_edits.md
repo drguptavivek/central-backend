@@ -35,3 +35,6 @@ This file tracks VG changes made directly to upstream core files.
 - Functions: isAppUserIpLocked, getAppUserLoginFailuresFromIp, hasRecentAppUserIpLockout, getLatestAppUserIpLockoutAt.
 - Constants: IP_MAX_FAILURES=20, IP_WINDOW_MINUTES=15, IP_LOCK_DURATION_MINUTES=30.
 - Returns 429.7 Problem with retryAfterSeconds when IP is locked.
+
+## lib/http/endpoint.js
+- Skip wrapping POST `/sessions` in a transaction so failed login audit entries persist on 401 responses.
