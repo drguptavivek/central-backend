@@ -260,4 +260,151 @@ SET verbs = verbs || '["project.read"]'::jsonb
 WHERE system = 'app-user'
   AND NOT verbs @> '["project.read"]'::jsonb;
 
+-- ============================================================================
+-- VG Web User 2FA (TOTP) Tables
+-- ============================================================================
+
+-- TOTP secrets (encrypted at rest)
+CREATE TABLE IF NOT EXISTS vg_web_user_totp (
+  "actorId" integer PRIMARY KEY REFERENCES users("actorId") ON DELETE CASCADE,
+  totp_secret text NOT NULL,           -- Base32-encoded, encrypted
+  totp_enabled boolean NOT NULL DEFAULT false,
+  totp_enabled_at timestamptz NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vg_web_user_totp_enabled
+  ON vg_web_user_totp (totp_enabled);
+
+-- Backup codes for 2FA recovery (bcrypt hashed)
+CREATE TABLE IF NOT EXISTS vg_web_user_totp_backup_codes (
+  id bigserial PRIMARY KEY,
+  "actorId" integer NOT NULL REFERENCES users("actorId") ON DELETE CASCADE,
+  code_hash text NOT NULL,              -- bcrypt hashed
+  used_at timestamptz NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vg_backup_codes_actor_unused
+  ON vg_web_user_totp_backup_codes ("actorId", used_at)
+  WHERE used_at IS NULL;
+
+-- 2FA verification attempts (rate limiting)
+CREATE TABLE IF NOT EXISTS vg_web_user_totp_attempts (
+  id bigserial PRIMARY KEY,
+  "actorId" integer NOT NULL REFERENCES users("actorId") ON DELETE CASCADE,
+  ip text NULL,
+  success boolean NOT NULL,
+  attempt_type text NOT NULL,          -- 'totp' or 'backup_code'
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vg_totp_attempts_actor_created
+  ON vg_web_user_totp_attempts ("actorId", created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vg_totp_attempts_ip_created
+  ON vg_web_user_totp_attempts (ip, created_at DESC);
+
+-- ============================================================================
+-- VG User IP Whitelist (for Bearer token API access)
+-- ============================================================================
+
+-- Per-user IP whitelist (for Bearer token auth)
+CREATE TABLE IF NOT EXISTS vg_user_ip_whitelist (
+  id bigserial PRIMARY KEY,
+  "actorId" integer NOT NULL REFERENCES users("actorId") ON DELETE CASCADE,
+  ip_cidr cidr NOT NULL,                -- Supports 192.168.1.0/24
+  description text NULL,
+  enabled boolean NOT NULL DEFAULT true,
+  created_by integer NULL REFERENCES users("actorId"),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vg_ip_whitelist_actor_enabled
+  ON vg_user_ip_whitelist ("actorId", enabled)
+  WHERE enabled = true;
+
+-- ============================================================================
+-- Session Modification (Add TOTP verification flag)
+-- ============================================================================
+
+ALTER TABLE IF EXISTS sessions
+  ADD COLUMN IF NOT EXISTS totp_verified boolean NOT NULL DEFAULT true;
+-- Default true for backward compatibility (existing sessions)
+
+-- ============================================================================
+-- VG Settings for 2FA
+-- ============================================================================
+
+-- Update vg_settings constraint to include new setting names
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vg_settings_positive_int'
+  ) THEN
+    ALTER TABLE vg_settings DROP CONSTRAINT vg_settings_positive_int;
+  END IF;
+  ALTER TABLE vg_settings
+    ADD CONSTRAINT vg_settings_positive_int CHECK (
+      vg_key_name NOT IN (
+        'vg_app_user_session_ttl_days',
+        'vg_app_user_session_cap',
+        'vg_app_user_lock_max_failures',
+        'vg_app_user_lock_window_minutes',
+        'vg_app_user_lock_duration_minutes',
+        'vg_web_user_lock_max_failures',
+        'vg_web_user_lock_window_minutes',
+        'vg_web_user_lock_duration_minutes',
+        'vg_web_user_ip_max_failures',
+        'vg_web_user_ip_window_minutes',
+        'vg_web_user_ip_duration_minutes',
+        'vg_totp_max_failures',              -- NEW
+        'vg_totp_window_minutes',            -- NEW
+        'vg_totp_lock_duration_minutes'      -- NEW
+      )
+      OR vg_key_value ~ '^[1-9][0-9]*$'
+    );
+END$$;
+
+-- Insert 2FA settings
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_web_user_totp_mandatory', 'false')  -- Set true after grace period
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_totp_max_failures', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_totp_window_minutes', '5')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+INSERT INTO vg_settings (vg_key_name, vg_key_value)
+  VALUES ('vg_totp_lock_duration_minutes', '15')
+  ON CONFLICT (vg_key_name) DO NOTHING;
+
+-- Update project settings constraint to include new setting names
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vg_project_settings_positive_int'
+  ) THEN
+    ALTER TABLE vg_project_settings DROP CONSTRAINT vg_project_settings_positive_int;
+  END IF;
+  ALTER TABLE vg_project_settings
+    ADD CONSTRAINT vg_project_settings_positive_int CHECK (
+      vg_key_name NOT IN (
+        'vg_app_user_session_ttl_days',
+        'vg_app_user_session_cap',
+        'vg_app_user_lock_max_failures',
+        'vg_app_user_lock_window_minutes',
+        'vg_app_user_lock_duration_minutes',
+        'vg_web_user_lock_max_failures',
+        'vg_web_user_lock_window_minutes',
+        'vg_web_user_lock_duration_minutes',
+        'vg_web_user_ip_max_failures',
+        'vg_web_user_ip_window_minutes',
+        'vg_web_user_ip_duration_minutes',
+        'vg_totp_max_failures',              -- NEW
+        'vg_totp_window_minutes',            -- NEW
+        'vg_totp_lock_duration_minutes'      -- NEW
+      )
+      OR vg_key_value ~ '^[1-9][0-9]*$'
+    );
+END$$;
+
 COMMIT;
