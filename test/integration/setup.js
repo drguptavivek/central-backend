@@ -76,10 +76,43 @@ const populate = (container, [ head, ...tail ] = fixtures) =>
 // this hook won't run if `test-unit` is called, as this directory is skipped
 // in that case.
 const initialize = async () => {
+  const { slonikPool } = require(appRoot + '/lib/external/slonik');
+  const cleanupPool = slonikPool(config.get('default.database')); // Separate connection for cleanup
+
   const migrator = knexConnect(config.get('test.database'));
   const { log } = console;
   try {
-    await migrator.raw('drop owned by current_user');
+    // The service auto-initializes databases with migrations + fixtures.
+    // This causes "drop owned by current_user" to fail due to FK constraints.
+    // Solution: Use a separate connection to drop all objects as superuser.
+    await cleanupPool.query(sql`
+      DO $$
+      DECLARE
+        r RECORD;
+      BEGIN
+        -- Drop all tables first (in reverse dependency order)
+        FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename DESC
+        LOOP
+          EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+        END LOOP;
+
+        -- Then drop all sequences
+        FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public'
+        LOOP
+          EXECUTE 'DROP SEQUENCE IF EXISTS ' || quote_ident(r.sequencename);
+        END LOOP;
+
+        -- Drop all enums
+        FOR r IN SELECT t.typname
+                 FROM pg_type t
+                 JOIN pg_namespace n ON t.typnamespace = n.oid
+                 WHERE t.typtype = 'e' AND n.nspname = 'public'
+        LOOP
+          EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
+        END LOOP;
+      END $$;
+    `);
+
     // Silence logging from migrations.
     console.log = noop; // eslint-disable-line no-console
     await migrator.migrate.latest({ directory: appRoot + '/lib/model/migrations' });
