@@ -189,13 +189,13 @@ describe('util: vg-totp', () => {
       codes.should.have.length(5);
     });
 
-    it('should generate 8-digit numeric codes', () => {
+    it('should generate 12-digit numeric codes', () => {
       const codes = generateBackupCodes();
 
       codes.forEach((code) => {
-        code.should.match(/^\d{8}$/);
+        code.should.match(/^\d{12}$/);
         const num = parseInt(code, 10);
-        num.should.be.within(10000000, 99999999);
+        num.should.be.within(100000000000, 999999999999);
       });
     });
 

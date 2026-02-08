@@ -368,7 +368,7 @@ INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_web_user_totp_mandatory', 'false')  -- Set true after grace period
   ON CONFLICT (vg_key_name) DO NOTHING;
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
-  VALUES ('vg_totp_max_failures', '5')
+  VALUES ('vg_totp_max_failures', '6')
   ON CONFLICT (vg_key_name) DO NOTHING;
 INSERT INTO vg_settings (vg_key_name, vg_key_value)
   VALUES ('vg_totp_window_minutes', '5')

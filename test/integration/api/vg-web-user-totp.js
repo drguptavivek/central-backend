@@ -135,15 +135,13 @@ describe('api: vg web-user totp', () => {
     // Second phase - verify TOTP
     const totpToken = generateToken(setup.secret);
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login.token}`) // Cookie name might be 'session' in test
-      .set('X-CSRF-Token', login.csrf)
+      .set('Authorization', `Bearer ${login.token}`)
       .send({ token: totpToken })
       .expect(200);
 
     // Should now be able to access protected resources
     await service.get('/v1/users/current')
-      .set('Cookie', `session=${login.token}`)
-      .set('X-CSRF-Token', login.csrf)
+      .set('Authorization', `Bearer ${login.token}`)
       .expect(200);
   }));
 
@@ -159,8 +157,7 @@ describe('api: vg web-user totp', () => {
     const login = await fullLogin(service, 'alice@getodk.org', 'password4alice');
 
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login.token}`)
-      .set('X-CSRF-Token', login.csrf)
+      .set('Authorization', `Bearer ${login.token}`)
       .send({ token: setup.backupCodes[0], attemptType: 'backup_code' })
       .expect(200);
   }));
@@ -177,8 +174,7 @@ describe('api: vg web-user totp', () => {
     const login = await fullLogin(service, 'alice@getodk.org', 'password4alice');
 
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login.token}`)
-      .set('X-CSRF-Token', login.csrf)
+      .set('Authorization', `Bearer ${login.token}`)
       .send({ token: setup.backupCodes[0], attemptType: 'backup_code' })
       .expect(200);
 
@@ -202,15 +198,13 @@ describe('api: vg web-user totp', () => {
 
     const login1 = await fullLogin(service, 'alice@getodk.org', 'password4alice');
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login1.token}`)
-      .set('X-CSRF-Token', login1.csrf)
+      .set('Authorization', `Bearer ${login1.token}`)
       .send({ token: setup.backupCodes[0], attemptType: 'backup_code' })
       .expect(200);
 
     const login2 = await fullLogin(service, 'alice@getodk.org', 'password4alice');
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login2.token}`)
-      .set('X-CSRF-Token', login2.csrf)
+      .set('Authorization', `Bearer ${login2.token}`)
       .send({ token: setup.backupCodes[0], attemptType: 'backup_code' })
       .expect(401);
   }));
@@ -285,19 +279,17 @@ describe('api: vg web-user totp', () => {
 
     for (let i = 0; i < 5; i++) {
       await service.post('/v1/sessions/totp-verify')
-        .set('Cookie', `session=${login.token}`)
-        .set('X-CSRF-Token', login.csrf)
+        .set('Authorization', `Bearer ${login.token}`)
         .send({ token: '000000' })
         .expect(401);
     }
 
     await service.post('/v1/sessions/totp-verify')
-      .set('Cookie', `session=${login.token}`)
-      .set('X-CSRF-Token', login.csrf)
+      .set('Authorization', `Bearer ${login.token}`)
       .send({ token: '111111' })
-      .expect(401)
+      .expect(429)
       .then(({ body }) => {
-        should.exist(body.retryAfterSeconds);
+        should.exist(body.details.retryAfterSeconds);
       });
   }));
 

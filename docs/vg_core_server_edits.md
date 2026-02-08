@@ -38,3 +38,11 @@ This file tracks VG changes made directly to upstream core files.
 
 ## lib/http/endpoint.js
 - Skip wrapping POST `/sessions` in a transaction so failed login audit entries persist on 401 responses.
+
+## lib/resources/sessions.js
+- **TOTP Enrollment Logic (lines 149-183)**: Added role-based mandatory TOTP enrollment checks for web users.
+  - When user logs in without TOTP enabled, check if their role requires mandatory TOTP (`isRoleMandatoryForTotp`).
+  - If mandatory: return `requireTotpSetup: true, mandatory: true` without setting cookies (5-minute temp session).
+  - If not mandatory: create normal session, then check `shouldPromptEnrollment` and return `shouldPromptTotpEnrollment` flag.
+  - Allows system admins to enforce 2FA for specific roles (e.g., admin) while prompting others optionally.
+  - **Reason**: Enables configurable 2FA enrollment enforcement per role (beads task central-2fm).

@@ -395,21 +395,21 @@ describe('api: vg web user IP rate limiting', () => {
           from vg_settings
           where vg_key_name='vg_web_user_ip_max_failures'
         `);
-        maxFailures = maxFailuresResult.orElse(20);
+        maxFailures = maxFailuresResult.map(r => r.value).orElse(20);
 
         const windowMinutesResult = await container.maybeOne(sql`
           select vg_key_value::int as value
           from vg_settings
           where vg_key_name='vg_web_user_ip_window_minutes'
         `);
-        windowMinutes = windowMinutesResult.orElse(15);
+        windowMinutes = windowMinutesResult.map(r => r.value).orElse(15);
 
         const durationMinutesResult = await container.maybeOne(sql`
           select vg_key_value::int as value
           from vg_settings
           where vg_key_name='vg_web_user_ip_duration_minutes'
         `);
-        durationMinutes = durationMinutesResult.orElse(30);
+        durationMinutes = durationMinutesResult.map(r => r.value).orElse(30);
 
         maxFailures.should.equal(20);
         windowMinutes.should.equal(15);
