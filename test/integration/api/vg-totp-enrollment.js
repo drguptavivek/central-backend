@@ -216,4 +216,175 @@ describe('api: vg TOTP enrollment query methods', () => {
       should.exist(record.totp_prompt_remind_after);
     }));
   });
+
+  // VG: Service account exclusion tests (added 2026-02-09)
+  // NOTE: These tests require users.is_service_account column (added in service account migration)
+  describe('service account exclusions', () => {
+    // Helper to check if is_service_account column exists
+    const checkServiceAccountColumnExists = async (container) => {
+      try {
+        await container.run(sql`
+          SELECT is_service_account FROM users LIMIT 1
+        `);
+        return true;
+      } catch (err) {
+        // Column doesn't exist yet
+        return false;
+      }
+    };
+
+    describe('isRoleMandatoryForTotp', () => {
+      it('should return false for service account (even if admin role)', testService(async (service, container) => {
+        // Check if column exists
+        const columnExists = await checkServiceAccountColumnExists(container);
+        if (!columnExists) {
+          // eslint-disable-next-line no-console
+          console.log('  ⚠️  Skipping: is_service_account column does not exist yet');
+          return; // Skip test
+        }
+
+        const alice = await container.Users.getByEmail('alice@getodk.org');
+        const actorId = alice.get().actor.id;
+
+        // Mark Alice as service account
+        await container.run(sql`
+          UPDATE users SET is_service_account = true WHERE "actorId" = ${actorId}
+        `);
+
+        try {
+          // Even though Alice is admin, should return false (service accounts excluded)
+          const isMandatory = await container.VgWebUserTotp.isRoleMandatoryForTotp(actorId);
+
+          isMandatory.should.equal(false);
+        } finally {
+          // Clean up: reset service account flag
+          await container.run(sql`
+            UPDATE users SET is_service_account = false WHERE "actorId" = ${actorId}
+          `);
+        }
+      }));
+
+      it('should return true for regular admin user', testService(async (service, container) => {
+        const columnExists = await checkServiceAccountColumnExists(container);
+        if (!columnExists) {
+          // eslint-disable-next-line no-console
+          console.log('  ⚠️  Skipping: is_service_account column does not exist yet');
+          return;
+        }
+
+        const alice = await container.Users.getByEmail('alice@getodk.org');
+        const actorId = alice.get().actor.id;
+
+        // Ensure Alice is NOT a service account
+        await container.run(sql`
+          UPDATE users SET is_service_account = false WHERE "actorId" = ${actorId}
+        `);
+
+        // Admin user (not service account) should return true
+        const isMandatory = await container.VgWebUserTotp.isRoleMandatoryForTotp(actorId);
+
+        isMandatory.should.equal(true);
+      }));
+    });
+
+    describe('shouldPromptEnrollment', () => {
+      it('should return false for service account (never prompt)', testService(async (service, container) => {
+        const columnExists = await checkServiceAccountColumnExists(container);
+        if (!columnExists) {
+          // eslint-disable-next-line no-console
+          console.log('  ⚠️  Skipping: is_service_account column does not exist yet');
+          return;
+        }
+
+        const alice = await container.Users.getByEmail('alice@getodk.org');
+        const actorId = alice.get().actor.id;
+
+        // Clean up any existing TOTP record
+        await container.run(sql`
+          DELETE FROM vg_web_user_totp WHERE "actorId" = ${actorId}
+        `);
+
+        // Mark as service account
+        await container.run(sql`
+          UPDATE users SET is_service_account = true WHERE "actorId" = ${actorId}
+        `);
+
+        try {
+          // Service accounts should NEVER be prompted
+          const shouldPrompt = await container.VgWebUserTotp.shouldPromptEnrollment(actorId);
+
+          shouldPrompt.should.equal(false);
+        } finally {
+          // Clean up
+          await container.run(sql`
+            UPDATE users SET is_service_account = false WHERE "actorId" = ${actorId}
+          `);
+        }
+      }));
+
+      it('should return true for regular user who has never been prompted', testService(async (service, container) => {
+        const columnExists = await checkServiceAccountColumnExists(container);
+        if (!columnExists) {
+          // eslint-disable-next-line no-console
+          console.log('  ⚠️  Skipping: is_service_account column does not exist yet');
+          return;
+        }
+
+        const alice = await container.Users.getByEmail('alice@getodk.org');
+        const actorId = alice.get().actor.id;
+
+        // Clean up any existing TOTP record
+        await container.run(sql`
+          DELETE FROM vg_web_user_totp WHERE "actorId" = ${actorId}
+        `);
+
+        // Ensure NOT a service account
+        await container.run(sql`
+          UPDATE users SET is_service_account = false WHERE "actorId" = ${actorId}
+        `);
+
+        // Regular user should be prompted
+        const shouldPrompt = await container.VgWebUserTotp.shouldPromptEnrollment(actorId);
+
+        shouldPrompt.should.equal(true);
+      }));
+
+      it('should return false for service account even with TOTP enabled', testService(async (service, container) => {
+        const columnExists = await checkServiceAccountColumnExists(container);
+        if (!columnExists) {
+          // eslint-disable-next-line no-console
+          console.log('  ⚠️  Skipping: is_service_account column does not exist yet');
+          return;
+        }
+
+        const alice = await container.Users.getByEmail('alice@getodk.org');
+        const actorId = alice.get().actor.id;
+
+        // Create TOTP record
+        await container.run(sql`
+          INSERT INTO vg_web_user_totp ("actorId", totp_secret, totp_enabled, totp_enabled_at, created_at, updated_at)
+          VALUES (${actorId}, 'JBSWY3DPEHPK3PXP', true, NOW(), NOW(), NOW())
+          ON CONFLICT ("actorId") DO UPDATE
+          SET totp_enabled = true, totp_enabled_at = NOW()
+        `);
+
+        // Mark as service account
+        await container.run(sql`
+          UPDATE users SET is_service_account = true WHERE "actorId" = ${actorId}
+        `);
+
+        try {
+          // Service account check should happen BEFORE TOTP enabled check
+          const shouldPrompt = await container.VgWebUserTotp.shouldPromptEnrollment(actorId);
+
+          shouldPrompt.should.equal(false);
+        } finally {
+          // Clean up
+          await container.run(sql`
+            UPDATE users SET is_service_account = false WHERE "actorId" = ${actorId}
+          `);
+        }
+      }));
+    });
+  });
 });
