@@ -24,11 +24,11 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set node version
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 22.21.1
+        node-version-file: package.json
         cache: 'npm'
     - run: npm ci
     - run: FAKE_OIDC_ROOT_URL=http://localhost:9898 make fake-oidc-server-ci > fake-oidc-server.log &
