@@ -38,3 +38,6 @@ This file tracks VG changes made directly to upstream core files.
 
 ## lib/http/endpoint.js
 - Skip wrapping POST `/sessions` in a transaction so failed login audit entries persist on 401 responses.
+
+## lib/model/migrations/20260115-01-submission-event-stamping-unshared-events-01.up.sql
+- Create `submission_event_idx` after renumbering existing submissions so upgrades with duplicate legacy `event` values can complete. Make the index changes idempotent for retry after partially applied non-transactional attempts. Run the migration outside the Knex wrapper transaction and split index creation into a separate SQL file so Postgres can clear pending trigger events before index creation. Temporarily disable the submission event-stamping trigger while renumbering legacy events because it calls the get_event() function being replaced.

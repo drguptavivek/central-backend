@@ -7,11 +7,11 @@
 -- including this file, may be copied, modified, propagated, or distributed
 -- except according to the terms contained in the LICENSE file.
 
+ALTER TABLE submissions DISABLE TRIGGER set_eventstamp_submissions_at_commit;
+
 DROP FUNCTION IF EXISTS "public"."get_event"() CASCADE;
 
-DROP INDEX event_idx;
-
-CREATE UNIQUE INDEX submission_event_idx ON submissions (event);
+DROP INDEX IF EXISTS event_idx;
 
 TRUNCATE TABLE current_event;
 
