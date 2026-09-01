@@ -16,7 +16,8 @@ const createAppUser = (service, asUser, projectId = 1, overrides = {}) => {
     password: overrides.password || STRONG_PASSWORD,
     fullName: overrides.fullName || 'Legacy VG App User',
     phone: overrides.phone,
-    active: overrides.active
+    active: overrides.active,
+    properties: overrides.properties
   };
   return asUser.post(`/v1/projects/${projectId}/app-users`)
     .send(payload)
@@ -78,6 +79,22 @@ describe('vg org app-users (short token flow)', () => {
     await createAppUser(service, asAlice, project2, { fullName: 'p2-a' });
     const list = await asAlice.get('/v1/projects/1/app-users').expect(200).then(({ body }) => body);
     list.map((u) => u.displayName).should.eql(['p1-b', 'p1-a']);
+  }));
+
+  it('preserves actor properties when creating and updating a VG app user', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    await asAlice.post('/v1/projects/1/actor-properties').send({ name: 'region' }).expect(200);
+    const appUser = await createAppUser(service, asAlice, 1, { properties: { region: ' north ' } });
+
+    await asAlice.get(`/v1/projects/1/app-users/${appUser.id}`)
+      .set('X-Extended-Metadata', 'true')
+      .expect(200)
+      .then(({ body }) => body.properties.should.eql({ region: 'north' }));
+
+    await asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+      .send({ properties: { region: 'south' } })
+      .expect(200)
+      .then(({ body }) => body.properties.should.eql({ region: 'south' }));
   }));
 
   it('omits session tokens from listings even after login', testService(async (service) => {

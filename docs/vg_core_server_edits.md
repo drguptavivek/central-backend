@@ -2,6 +2,16 @@
 
 This file tracks VG changes made directly to upstream core files.
 
+## lib/resources/app-users.js
+- Keep VG username/password/phone/active and short-session behavior while
+  applying upstream actor properties during app-user creation and updates.
+- Return extended actor properties from app-user GET/PATCH responses and
+  redact session tokens from app-user management responses.
+
+## lib/model/query/field-keys.js
+- Join VG auth metadata for app-user responses and actor-property values for
+  extended metadata, while retaining the no-session field-key creation path.
+
 ## lib/resources/vg-app-user-auth.js
 - Ensure login handles missing JSON body by defaulting to an empty payload and returning missingParameters instead of throwing.
 - Treat whitespace-only username/password as missingParameters during login.
