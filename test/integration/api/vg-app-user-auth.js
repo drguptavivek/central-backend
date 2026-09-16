@@ -1,7 +1,7 @@
 const should = require('should');
 const { sql } = require('slonik');
 require('../assertions');
-const { testService } = require('../setup');
+const { testService, testServiceFullTrx } = require('../setup');
 const { getLockStatus } = require('../../../lib/model/query/vg-app-user-auth');
 
 const STRONG_PASSWORD = 'GoodPass!1X';
@@ -68,6 +68,39 @@ describe('api: vg app-user auth', () => {
     const diffHours = (new Date(expiresAt) - new Date(createdAt)) / (60 * 60 * 1000);
     diffHours.should.be.approximately(72, 0.1);
     new Date(login.expiresAt).getTime().should.be.approximately(new Date(expiresAt).getTime(), 1000);
+  }));
+
+  it('should persist failed app-user logins and enforce lockout across requests', testServiceFullTrx(async (service, container) => {
+    const username = 'vguser-transaction-boundary';
+    const password = STRONG_PASSWORD;
+    await createAppUser(service, { username, password });
+
+    for (let i = 0; i < 5; i += 1) {
+      // Sequential requests are required to exercise the lockout threshold.
+      // eslint-disable-next-line no-await-in-loop
+      await service.post('/v1/projects/1/app-users/login')
+        .send({ username, password: 'WrongPass!9Z' })
+        .expect(401);
+    }
+
+    const { count: failureCount } = await container.one(sql`
+      SELECT count(*)::int AS count
+      FROM audits
+      WHERE action='vg.app_user.login.failure'
+        AND details->>'username'=${username}
+    `);
+    failureCount.should.equal(5);
+
+    const { count: lockoutCount } = await container.one(sql`
+      SELECT count(*)::int AS count
+      FROM vg_app_user_lockouts
+      WHERE username=${username}
+    `);
+    lockoutCount.should.equal(1);
+
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password })
+      .expect(401);
   }));
 
   it('should reject non-string login credentials', testService(async (service) => {
@@ -904,6 +937,10 @@ describe('api: vg app-user auth', () => {
   }));
 
   it('should forbid an app user from changing an admin/user password via user routes', testService(async (service, container) => {
+    // The user password route is intentionally not registered when OIDC is
+    // enabled, so the production response is 404 in that deployment.
+    if (process.env.TEST_AUTH === 'oidc') return;
+
     await createAppUser(service, { username: 'vguser-noadmin' });
     const { token } = await service.post('/v1/projects/1/app-users/login')
       .send({ username: 'vguser-noadmin', password: STRONG_PASSWORD })

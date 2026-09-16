@@ -43,6 +43,17 @@ This file tracks VG changes made directly to upstream core files.
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
 - When ip is missing, scope lockout status/clears to rows with null ip instead of all IPs.
 - Include actor acteeId on session lookup to support audit logging for session revokes.
+- Require an expiry when recording app-user sessions; the upgrade migration
+  expires legacy rows whose expiry was NULL.
+
+## lib/http/endpoint.js
+- Keep failed web and app-user login attempts outside the request transaction
+  so lockouts and security audits survive rejected responses. The app-user
+  exception matches only `/projects/:projectId/app-users/login`.
+
+## lib/model/migrations/20260918-01-vg-expire-null-app-user-sessions.js (NEW)
+- Mark existing `vg_app_user_sessions` rows with `expires_at IS NULL` as
+  expired while retaining the rows for audit and retention history.
 
 ## lib/model/container.js
 - Register VgAppUserIpRateLimit query module in defaultQueries for IP-based rate limiting.
