@@ -113,6 +113,23 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.11); });
   }));
 
+  it('should include verbs when an app user requests project metadata', testService(async (service) => {
+    const username = 'vguser-project-verbs';
+    await createAppUser(service, { username });
+    const token = await service.post('/v1/projects/1/app-users/login')
+      .send({ username, password: STRONG_PASSWORD })
+      .expect(200)
+      .then(({ body }) => body.token);
+
+    await service.get('/v1/projects/1?verbs=true')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .then(({ body }) => {
+        body.id.should.equal(1);
+        body.verbs.should.be.an.Array();
+      });
+  }));
+
   it('should preserve upstream no-op behavior for app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
@@ -801,7 +818,8 @@ describe('api: vg app-user auth', () => {
       await service.login('alice', (asAlice) =>
         asAlice.post('/v1/projects/1/app-users')
           .send({ username: `vguser-${Math.random().toString(36).slice(2, 8)}`, password: pwd, fullName: 'Bad Pass' })
-          .expect(400));
+          .expect(400)
+          .then(({ body }) => body.code.should.equal(400.44)));
     }
 
     await service.login('alice', (asAlice) =>

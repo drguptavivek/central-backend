@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('node:assert');
 const { LEGACY_PASSWORD,
   adaptLegacyAppUserPayload,
   isLegacyCreateRequest } = require('../vg/legacy-app-user-fixture');

@@ -235,14 +235,14 @@ describe('vg org app-users (short token flow)', () => {
     // Change password via self route using current token to invalidate sessions.
     await service.post(`/v1/projects/1/app-users/${appUser.id}/password/change`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ oldPassword: STRONG_PASSWORD, newPassword: 'NewPass!2Y' })
+      .send({ oldPassword: STRONG_PASSWORD, newPassword: 'AnotherGood1!' })
       .expect(200);
     await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
       .send(testData.instances.simple.one)
       .set('Content-Type', 'application/xml')
       .expect(403);
     // New token should work.
-    const newToken = await loginAppUser(service, { username: appUser.username, password: 'NewPass!2Y' });
+    const newToken = await loginAppUser(service, { username: appUser.username, password: 'AnotherGood1!' });
     await service.post(`/v1/key/${newToken}/projects/1/forms/simple/submissions`)
       .send(testData.instances.simple.one)
       .set('Content-Type', 'application/xml')

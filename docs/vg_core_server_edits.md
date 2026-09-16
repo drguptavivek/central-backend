@@ -31,6 +31,13 @@ This file tracks VG changes made directly to upstream core files.
 - When revoking sessions without a projectId, skip audit acteeId and synthesize a field_key actor for session termination.
 - Reject self revoke when the current auth session is missing.
 - Skip duplicate audits when a session is already revoked or an app user is already inactive.
+- Keep the VG composition password policy while mapping failures to upstream
+  `passwordTooWeak` (400.44), so app-user password validation uses the shared
+  upstream problem contract.
+
+## lib/resources/projects.js
+- Preserve the VG app-user project projection and apply the upstream
+  `?verbs=true` query behavior to both normal and app-user project responses.
 
 ## lib/model/query/vg-app-user-auth.js
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
