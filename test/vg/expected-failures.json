@@ -41,5 +41,10 @@
     "failureMessage": "to equal Array [ 'field_key.delete', 'field_key.create' ]",
     "adaptLegacyFixture": true,
     "reason": "VG secure app-user creation uses the namespaced vg.app_user.create audit action, so the upstream field_key.create audit is intentionally absent."
+  },
+  {
+    "fullTitle": "project viewer role should be able to download submissions",
+    "failureMessage": "expected 200 \"OK\", got 403",
+    "reason": "VG submission exports require the explicit submission.export verb; the upstream Project Viewer fixture grants submission.read only."
   }
 ]
