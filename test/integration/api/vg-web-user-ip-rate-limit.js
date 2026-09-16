@@ -27,6 +27,8 @@ describe('api: vg web user IP rate limiting', () => {
       // First 20 attempts should return 401
       for (let i = 0; i < 20; i += 1) {
         const username = usernames[Math.floor(i / 5)];
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: username, password: 'wrongpassword' })
@@ -37,7 +39,7 @@ describe('api: vg web user IP rate limiting', () => {
       const response = await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: 'user21@test.com', password: 'wrongpassword' })
-        .expect(429);  // 429 Too Many Requests
+        .expect(429); // 429 Too Many Requests
 
       // Should indicate IP lockout
       if (response.body.code !== undefined) {
@@ -55,32 +57,31 @@ describe('api: vg web user IP rate limiting', () => {
       `);
 
       // Verify cleanup worked
-      const countBefore = await container.one(sql`
+      await container.one(sql`
         SELECT count(*)::int AS count
         FROM audits
         WHERE details->>'ip'=${ip}
       `);
-      console.log(`Audit entries for IP ${ip} before test:`, countBefore.count);
 
       // Make 19 failed attempts across different usernames
       for (let i = 0; i < 19; i += 1) {
         // Check count before this request
-        const countBefore = await container.one(sql`
+        // eslint-disable-next-line no-await-in-loop
+        const countBeforeRequest = await container.one(sql`
           SELECT count(*)::int AS count
           FROM audits
           WHERE action = 'user.session.create.failure'
             AND details->>'ip'=${ip}
         `);
 
+        // eslint-disable-next-line no-await-in-loop
         const response = await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' });
 
-        console.log(`Request ${i+1}: count before=${countBefore.count}, status=${response.status}`);
-
         // First 19 should return 401
         if (response.status === 429) {
-          throw new Error(`Request ${i+1} returned 429 (IP locked) instead of 401. IP lockout triggered too early! Count before was ${countBefore.count}`);
+          throw new Error(`Request ${i+1} returned 429 (IP locked) instead of 401. IP lockout triggered too early! Count before was ${countBeforeRequest.count}`);
         }
         response.status.should.equal(401);
       }
@@ -89,7 +90,7 @@ describe('api: vg web user IP rate limiting', () => {
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: 'user19@test.com', password: 'wrongpassword' })
-        .expect(401);  // Not 429, so not IP locked
+        .expect(401); // Not 429, so not IP locked
     }));
 
     it('should track per-user lockout independently from IP lockout', testService(async (service) => {
@@ -97,6 +98,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // User1: 5 failed attempts → user-locked
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: 'user1@test.com', password: 'wrongpassword' })
@@ -121,6 +124,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Legitimate user makes 3 typos with their email
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: 'alice@getodk.org', password: 'wrongpassword' })
@@ -140,6 +145,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Make 20 failed attempts to trigger IP lockout
       for (let i = 0; i < 20; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -160,7 +167,7 @@ describe('api: vg web user IP rate limiting', () => {
       `);
 
       ipLockoutAudits.length.should.be.greaterThan(0);
-      const details = ipLockoutAudits[0].details;
+      const { details } = ipLockoutAudits[0];
       details.ip.should.equal(ip);
       should.exist(details.durationMinutes);
       details.durationMinutes.should.equal(30);
@@ -171,7 +178,9 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Create 10 old failures (outside 15-minute window) using raw SQL
       // Strategy: Insert entries first, then update timestamps separately
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i += 1) {
+        // Insert each audit row in order for deterministic timestamp checks.
+        // eslint-disable-next-line no-await-in-loop
         await container.run(sql`
           insert into audits (action, details)
           values (
@@ -256,6 +265,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Make 15 new failures
       for (let i = 0; i < 15; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -267,7 +278,7 @@ describe('api: vg web user IP rate limiting', () => {
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: 'user15@test.com', password: 'wrongpassword' })
-        .expect(401);  // Not 429
+        .expect(401); // Not 429
     }));
 
     it('should lift IP lockout after IP lock duration expires (30 minutes)', testService(async (service, container) => {
@@ -275,6 +286,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Make 20 failed attempts (not locked yet)
       for (let i = 0; i < 20; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -315,6 +328,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // 5 failed attempts should trigger per-user lockout
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -329,6 +344,8 @@ describe('api: vg web user IP rate limiting', () => {
     it('should track different IPs independently', testService(async (service) => {
       // IP1: 20 failed attempts → not locked yet
       for (let i = 0; i < 20; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', '8.8.8.8')
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -359,6 +376,8 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Make 20 failed attempts to trigger IP lockout
       for (let i = 0; i < 20; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -395,21 +414,21 @@ describe('api: vg web user IP rate limiting', () => {
           from vg_settings
           where vg_key_name='vg_web_user_ip_max_failures'
         `);
-        maxFailures = maxFailuresResult.orElse(20);
+        maxFailures = maxFailuresResult.map((row) => row.value).orElse(20);
 
         const windowMinutesResult = await container.maybeOne(sql`
           select vg_key_value::int as value
           from vg_settings
           where vg_key_name='vg_web_user_ip_window_minutes'
         `);
-        windowMinutes = windowMinutesResult.orElse(15);
+        windowMinutes = windowMinutesResult.map((row) => row.value).orElse(15);
 
         const durationMinutesResult = await container.maybeOne(sql`
           select vg_key_value::int as value
           from vg_settings
           where vg_key_name='vg_web_user_ip_duration_minutes'
         `);
-        durationMinutes = durationMinutesResult.orElse(30);
+        durationMinutes = durationMinutesResult.map((row) => row.value).orElse(30);
 
         maxFailures.should.equal(20);
         windowMinutes.should.equal(15);
@@ -419,6 +438,8 @@ describe('api: vg web user IP rate limiting', () => {
       // Now test that the settings are actually used
       // Make maxFailures failed attempts (matching the setting)
       for (let i = 0; i < maxFailures; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', ip)
           .send({ email: `user${i}@test.com`, password: 'wrongpassword' })
@@ -429,7 +450,7 @@ describe('api: vg web user IP rate limiting', () => {
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
         .send({ email: `user${maxFailures}@test.com`, password: 'wrongpassword' })
-        .expect(429);  // Triggers IP lockout, returns 429
+        .expect(429); // Triggers IP lockout, returns 429
 
       // Now verify IP is locked (should return 429)
       await service.post('/v1/sessions')

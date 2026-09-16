@@ -220,6 +220,29 @@ describe('api: /submission', () => {
               .then(({ text }) => { text.should.equal(testData.instances.simple.one); })
           ])))));
 
+    it('should save device id and user agent when editing a submission using OpenRosa', testService(async (service) => {
+      const asAlice = await service.login('alice');
+
+      await asAlice.post('/v1/projects/1/submission?deviceID=imei%3A358240051111110')
+        .set('X-OpenRosa-Version', '1.0')
+        .set('User-Agent', 'central/test')
+        .attach('xml_submission_file', Buffer.from(testData.instances.simple.one), { filename: 'data.xml' })
+        .expect(201);
+
+      await asAlice.post('/v1/projects/1/submission?deviceID=updated')
+        .set('X-OpenRosa-Version', '1.0')
+        .set('User-Agent', 'central/test_updated')
+        .attach('xml_submission_file', Buffer.from(testData.instances.simple.one.replace('<instanceID>one', '<deprecatedID>one</deprecatedID><instanceID>one_v2')), { filename: 'data.xml' })
+        .expect(201);
+
+      await asAlice.get('/v1/projects/1/forms/simple/submissions/one/versions')
+        .expect(200)
+        .then(({ body }) => {
+          body[0].deviceId.should.equal('updated');
+          body[0].userAgent.should.equal('central/test_updated');
+        });
+    }));
+
     it('should prepand odk-client to the user agent string', testService(async (service) => {
       const asAlice = await service.login('alice');
       await asAlice.post('/v1/projects/1/submission?deviceID=imei%3A358240051111110')
@@ -1543,13 +1566,16 @@ describe('api: /forms/:id/submissions', () => {
     it('should redirect to the edit_url', testService((service, { run }) =>
       run(sql`update forms set "enketoId"='myenketoid'`)
         .then(() => service.login('alice', (asAlice) =>
-          asAlice.post('/v1/projects/1/forms/simple/submissions')
-            .send(testData.instances.simple.one)
-            .set('Content-Type', 'application/xml')
+          asAlice.patch('/v1/projects/1/forms/simple')
+            .send({ webformsEnabled: false })
             .expect(200)
-            .then(() => asAlice.get('/v1/projects/1/forms/simple/submissions/one/edit')
-              .expect(302)
-              .then(({ text }) => { text.should.equal('Found. Redirecting to https://enketo/edit/url'); }))))));
+            .then(() => asAlice.post('/v1/projects/1/forms/simple/submissions')
+              .send(testData.instances.simple.one)
+              .set('Content-Type', 'application/xml')
+              .expect(200)
+              .then(() => asAlice.get('/v1/projects/1/forms/simple/submissions/one/edit')
+                .expect(302)
+                .then(({ text }) => { text.should.equal('Found. Redirecting to https://enketo/edit/url'); })))))));
 
     // TODO: okay, so it'd be better if this were a true true integration test.
     it('should pass the appropriate parameters to the enketo module', testService((service, { run }) =>
@@ -1558,25 +1584,42 @@ describe('api: /forms/:id/submissions', () => {
           .set('Content-Type', 'text/xml')
           .send(testData.forms.binaryType)
           .expect(200)
-          .then(() => asAlice.post('/v1/projects/1/forms/binaryType/submissions')
-            .send(testData.instances.binaryType.both)
+          .then(() => asAlice.patch('/v1/projects/1/forms/binaryType')
+            .send({ webformsEnabled: false })
+            .expect(200)
+            .then(() => asAlice.post('/v1/projects/1/forms/binaryType/submissions')
+              .send(testData.instances.binaryType.both)
+              .set('Content-Type', 'application/xml')
+              .expect(200))
+            .then(() => asAlice.post('/v1/projects/1/forms/binaryType/submissions/both/attachments/my_file1.mp4')
+              .set('Content-Type', 'application/octet-stream')
+              .send('this is a test file nr 1')
+              .expect(200))
+            .then(() => run(sql`update forms set "enketoId"='myenketoid'`))
+            .then(() => asAlice.get('/v1/projects/1/forms/binaryType/submissions/both/edit')
+              .expect(302))
+            .then(() => {
+              const { editData } = global.enketo;
+              editData.openRosaUrl.should.equal('http://localhost:8989/v1/projects/1');
+              editData.domain.should.equal('http://localhost:8989');
+              editData.logicalId.should.equal('both');
+              editData.attachments.length.should.equal(2);
+              editData.token.should.be.a.token();
+            })))));
+
+    it('should redirect to the edit_url - webformsEnabled', testService((service, { run }) =>
+      run(sql`update forms set "enketoId"='myenketoid'`)
+        .then(() => service.login('alice', (asAlice) =>
+          asAlice.post('/v1/projects/1/forms/simple/submissions')
+            .send(testData.instances.simple.one)
             .set('Content-Type', 'application/xml')
-            .expect(200))
-          .then(() => asAlice.post('/v1/projects/1/forms/binaryType/submissions/both/attachments/my_file1.mp4')
-            .set('Content-Type', 'application/octet-stream')
-            .send('this is a test file nr 1')
-            .expect(200))
-          .then(() => run(sql`update forms set "enketoId"='myenketoid'`))
-          .then(() => asAlice.get('/v1/projects/1/forms/binaryType/submissions/both/edit')
-            .expect(302))
-          .then(() => {
-            const { editData } = global.enketo;
-            editData.openRosaUrl.should.equal('http://localhost:8989/v1/projects/1');
-            editData.domain.should.equal('http://localhost:8989');
-            editData.logicalId.should.equal('both');
-            editData.attachments.length.should.equal(2);
-            editData.token.should.be.a.token();
-          }))));
+            .expect(200)
+            .then(() => asAlice.get('/v1/projects/1/forms/simple/submissions/one/edit')
+              .expect(302)
+              .then(({ text }) => {
+                text.should.match(/Found. Redirecting to /);
+                text.should.containEql('projects/1/forms/simple/submissions/one/edit');
+              }))))));
   });
 
   describe('/:instanceId PATCH', () => {

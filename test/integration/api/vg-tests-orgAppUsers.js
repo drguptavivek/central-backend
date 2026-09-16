@@ -16,7 +16,8 @@ const createAppUser = (service, asUser, projectId = 1, overrides = {}) => {
     password: overrides.password || STRONG_PASSWORD,
     fullName: overrides.fullName || 'Legacy VG App User',
     phone: overrides.phone,
-    active: overrides.active
+    active: overrides.active,
+    properties: overrides.properties
   };
   return asUser.post(`/v1/projects/${projectId}/app-users`)
     .send(payload)
@@ -78,6 +79,22 @@ describe('vg org app-users (short token flow)', () => {
     await createAppUser(service, asAlice, project2, { fullName: 'p2-a' });
     const list = await asAlice.get('/v1/projects/1/app-users').expect(200).then(({ body }) => body);
     list.map((u) => u.displayName).should.eql(['p1-b', 'p1-a']);
+  }));
+
+  it('preserves actor properties when creating and updating a VG app user', testService(async (service) => {
+    const asAlice = await service.login('alice');
+    await asAlice.post('/v1/projects/1/actor-properties').send({ name: 'region' }).expect(200);
+    const appUser = await createAppUser(service, asAlice, 1, { properties: { region: ' north ' } });
+
+    await asAlice.get(`/v1/projects/1/app-users/${appUser.id}`)
+      .set('X-Extended-Metadata', 'true')
+      .expect(200)
+      .then(({ body }) => body.properties.should.eql({ region: 'north' }));
+
+    await asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
+      .send({ properties: { region: 'south' } })
+      .expect(200)
+      .then(({ body }) => body.properties.should.eql({ region: 'south' }));
   }));
 
   it('omits session tokens from listings even after login', testService(async (service) => {
@@ -210,7 +227,7 @@ describe('vg org app-users (short token flow)', () => {
       .expect(403);
   }));
 
-  it('rejects submissions after password change using old token', testService(async (service, container) => {
+  it('rejects submissions after password change using old token', testService(async (service) => {
     const asAlice = await service.login('alice');
     const appUser = await createAppUser(service, asAlice);
     const token = await loginAppUser(service, appUser);
@@ -246,9 +263,17 @@ describe('vg org app-users (short token flow)', () => {
   it('deletes app users assignments on delete and scopes deletion to project', testService(async (service) => {
     const asAlice = await service.login('alice');
     const fk = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, fk);
     await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${fk.id}`).expect(200);
     await asAlice.delete(`/v1/projects/1/app-users/${fk.id}`).expect(200);
     await asAlice.get('/v1/projects/1/forms/simple/assignments').expect(200).then(({ body }) => body.should.eql([]));
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: fk.username, password: fk.password })
+      .expect(401);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
     const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'proj-2' }).expect(200).then(({ body }) => body);
     const fk2 = await createAppUser(service, asAlice, project2);
     await asAlice.delete(`/v1/projects/1/app-users/${fk2.id}`).expect(404);

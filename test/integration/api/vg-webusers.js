@@ -1,11 +1,13 @@
 const should = require('should');
 const { sql } = require('slonik');
-const { testService } = require('../setup');
+const { testService, testServiceFullTrx } = require('../setup');
 
 describe('api: /sessions (vg web users)', () => {
   if (process.env.TEST_AUTH === 'oidc') return;
 
-  it('should audit failed login attempts with normalized identifiers', testService(async (service, container) => {
+  // Failed-login audits intentionally survive the rejected request, so this
+  // test must use the full-transaction harness instead of the rollback wrapper.
+  it('should audit failed login attempts with normalized identifiers', testServiceFullTrx(async (service, container) => {
     await service.post('/v1/sessions')
       .send({ email: 'ChElSeA@GetOdk.Org', password: 'wrong-password' })
       .set('User-Agent', 'central/tests')
@@ -25,6 +27,8 @@ describe('api: /sessions (vg web users)', () => {
 
   it('should lock out logins after repeated failures', testService(async (service, container) => {
     for (let i = 0; i < 5; i += 1) {
+      // Sequential requests are required to exercise the lockout threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/sessions')
         .send({ email: 'chelsea@getodk.org', password: 'wrong-password' })
         .expect(401);
@@ -49,6 +53,8 @@ describe('api: /sessions (vg web users)', () => {
     await container.VgAppUserAuth.upsertSetting('vg_web_user_lock_duration_minutes', '2');
 
     for (let i = 0; i < 5; i += 1) {
+      // Sequential requests are required to exercise the configured threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/sessions')
         .send({ email: 'webuser-lockout-config@getodk.org', password: 'wrong-password' })
         .expect(401);
@@ -81,6 +87,8 @@ describe('api: /sessions (vg web users)', () => {
     await container.VgAppUserAuth.upsertSetting('vg_web_user_lock_duration_minutes', '1');
 
     for (let i = 0; i < 5; i += 1) {
+      // Sequential requests are required to exercise the retry-after threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/sessions')
         .send({ email: 'webuser-retry-after@getodk.org', password: 'wrong-password' })
         .expect(401);

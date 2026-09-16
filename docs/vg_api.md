@@ -2,6 +2,25 @@
 
 This document captures VG-specific API additions/changes in this fork.
 
+## Submission export authorization
+
+CSV, ZIP, and OData export requires the explicit `submission.export` verb.
+`submission.read` permits submission listing, individual submission detail, and
+attachment retrieval, but never grants export access.
+
+| Project role | Read/list submissions | CSV, ZIP, and OData export |
+| --- | --- | --- |
+| Administrator (`admin`) | Allowed | Allowed |
+| Project Manager (`manager`) | Allowed | Allowed |
+| Project Viewer (`viewer`) | Allowed | Denied |
+| Data Manager (`data_mgr`) | Allowed, including review workflows | Denied |
+| Custom role | According to assigned verbs | Allowed only with `submission.export` |
+
+The rule applies to published and draft CSV/ZIP endpoints and to OData service,
+metadata, collection, and row endpoints. Migration
+`20260917-01-vg-reconcile-submission-export-verbs` reconciles older databases
+that retained the historical Viewer verb with the fresh-install role matrix.
+
 ## Telemetry
 
 ### POST `/projects/:projectId/app-users/telemetry`
@@ -23,7 +42,11 @@ Records app-user telemetry (device metadata, timestamps, optional location).
 }
 ```
 
-`status` becomes `"invalidated"` if the current bearer token no longer resolves as a valid session by the time the telemetry record is processed.
+The bearer must identify an active, undeleted App User with a non-null VG
+session expiry later than the authentication statement. Expired, revoked,
+null-expiry, inactive, or deleted credentials return 401 and record no
+telemetry. `status` can become `"invalidated"` only if the core session is
+invalidated concurrently after that strict check.
 
 ## Settings
 

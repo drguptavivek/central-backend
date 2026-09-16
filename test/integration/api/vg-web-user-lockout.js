@@ -12,6 +12,8 @@ describe('api: vg web user lockout', () => {
 
       // Attempt 5 failed logins
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -36,6 +38,8 @@ describe('api: vg web user lockout', () => {
 
       // Lock out first email
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: email1, password: 'wrongpassword' })
           .expect(401);
@@ -71,11 +75,13 @@ describe('api: vg web user lockout', () => {
       count2.should.equal(1);
     }));
 
-    it('should track failed attempts separately for different IPs', testService(async (service, container) => {
+    it('should track failed attempts separately for different IPs', testService(async (service) => {
       const email = 'lockout-ip-test@getodk.org';
 
       // Create 5 failed attempts from IP 1.1.1.1
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .set('X-Forwarded-For', '1.1.1.1')
           .send({ email, password: 'wrongpassword' })
@@ -128,6 +134,8 @@ describe('api: vg web user lockout', () => {
 
       // 3 failed attempts
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -139,6 +147,8 @@ describe('api: vg web user lockout', () => {
 
       // 3 failed attempts for alice
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: aliceEmail, password: 'wrongpassword' })
           .expect(401);
@@ -152,6 +162,8 @@ describe('api: vg web user lockout', () => {
       // After successful login, counter should be reset
       // So we should be able to fail 5 more times
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: aliceEmail, password: 'wrongpassword' })
           .expect(401);
@@ -168,6 +180,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts to trigger lockout
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -189,6 +203,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts to trigger lockout
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -218,6 +234,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts to trigger lockout
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -243,6 +261,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts for alice
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: aliceEmail, password: 'wrongpassword' })
           .expect(401);
@@ -268,6 +288,8 @@ describe('api: vg web user lockout', () => {
 
       // 3 failed attempts with mixed case
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: email1, password: 'wrongpassword' })
           .expect(401);
@@ -275,6 +297,8 @@ describe('api: vg web user lockout', () => {
 
       // 2 more failed attempts with lowercase
       for (let i = 0; i < 2; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: email2, password: 'wrongpassword' })
           .expect(401);
@@ -316,6 +340,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -334,7 +360,7 @@ describe('api: vg web user lockout', () => {
       `);
 
       lockoutAudits.length.should.be.greaterThan(0);
-      const details = lockoutAudits[0].details;
+      const { details } = lockoutAudits[0];
       details.email.should.equal(email.toLowerCase());
       should.exist(details.durationMinutes);
       details.durationMinutes.should.equal(10);
@@ -345,6 +371,8 @@ describe('api: vg web user lockout', () => {
 
       // Failed attempts without IP should still be tracked
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -361,6 +389,8 @@ describe('api: vg web user lockout', () => {
 
       // Failed attempts should trim and normalize email
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -382,6 +412,8 @@ describe('api: vg web user lockout', () => {
 
       // Make 5 failed attempts
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);
@@ -403,6 +435,8 @@ describe('api: vg web user lockout', () => {
     it('should not lock out for missing email', testService(async (service) => {
       // Missing email should not trigger lockout tracking
       for (let i = 0; i < 10; i += 1) {
+        // Sequential requests are required to exercise validation behavior.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email: '', password: 'wrongpassword' })
           .expect(400);
@@ -418,6 +452,8 @@ describe('api: vg web user lockout', () => {
       // Verify lockout behavior with default hardcoded settings
       // MAX_FAILURES=5, WINDOW_MINUTES=5, LOCK_DURATION_MINUTES=10
       for (let i = 0; i < 5; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/sessions')
           .send({ email, password: 'wrongpassword' })
           .expect(401);

@@ -1,4 +1,4 @@
-const should = require('should');
+require('should');
 const { sql } = require('slonik');
 require('../assertions');
 const { testService } = require('../setup');
@@ -19,6 +19,8 @@ describe('api: vg user reset initiate rate limiting', () => {
       await cleanup(container);
 
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/users/reset/initiate')
           .set('X-Forwarded-For', ip)
           .send({ email: `${emailBase}${i}@test.com` })
@@ -37,11 +39,12 @@ describe('api: vg user reset initiate rate limiting', () => {
 
     it('should lock out email after 3 attempts within window (4th returns 429)', testService(async (service, container) => {
       const ip = '10.0.0.11';
-      const emailBase = 'reset-email';
       const email = 'reset-email@test.com';
       await cleanup(container);
 
       for (let i = 0; i < 3; i += 1) {
+        // Sequential requests are required to exercise the lockout threshold.
+        // eslint-disable-next-line no-await-in-loop
         await service.post('/v1/users/reset/initiate')
           .set('X-Forwarded-For', ip)
           .send({ email })

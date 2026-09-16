@@ -1,4 +1,5 @@
 const { testService } = require('../setup');
+require('../assertions');
 const testData = require('../../data/xml');
 
 const STRONG_PASSWORD = 'GoodPass!1X';

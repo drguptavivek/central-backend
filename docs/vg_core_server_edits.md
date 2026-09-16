@@ -2,6 +2,16 @@
 
 This file tracks VG changes made directly to upstream core files.
 
+## lib/resources/app-users.js
+- Keep VG username/password/phone/active and short-session behavior while
+  applying upstream actor properties during app-user creation and updates.
+- Return extended actor properties from app-user GET/PATCH responses and
+  redact session tokens from app-user management responses.
+
+## lib/model/query/field-keys.js
+- Join VG auth metadata for app-user responses and actor-property values for
+  extended metadata, while retaining the no-session field-key creation path.
+
 ## lib/resources/vg-app-user-auth.js
 - Ensure login handles missing JSON body by defaulting to an empty payload and returning missingParameters instead of throwing.
 - Treat whitespace-only username/password as missingParameters during login.
@@ -39,5 +49,23 @@ This file tracks VG changes made directly to upstream core files.
 ## lib/http/endpoint.js
 - Skip wrapping POST `/sessions` in a transaction so failed login audit entries persist on 401 responses.
 
+## lib/resources/odata.js and lib/resources/submissions.js
+- Route every published and draft CSV, ZIP, and OData export surface through
+  `vg-submission-export-auth.js`.
+- Require the explicit `submission.export` verb. Administrator and Project
+  Manager may export; Project Viewer and Data Manager retain submission read
+  access but may not export. This intentionally diverges from the upstream
+  Project Viewer download contract.
+- Keep the upstream Viewer role test unchanged and track that exact divergence
+  in the VG expected-failure manifest.
+
+## lib/model/migrations/20260917-01-vg-reconcile-submission-export-verbs.js (NEW)
+- Reconcile fresh and upgraded role rows by ensuring `submission.export` is
+  present for Administrator/Project Manager and absent for Project Viewer/Data
+  Manager, preserving all unrelated verbs.
+- The down migration is intentionally a no-op because historical installations
+  do not share one safe pre-migration role state.
+
 ## lib/model/migrations/20260115-01-submission-event-stamping-unshared-events-01.up.sql
-- Create `submission_event_idx` after renumbering existing submissions so upgrades with duplicate legacy `event` values can complete. Make the index changes idempotent for retry after partially applied non-transactional attempts. Run the migration outside the Knex wrapper transaction and split index creation into a separate SQL file so Postgres can clear pending trigger events before index creation. Temporarily disable the submission event-stamping trigger while renumbering legacy events because it calls the get_event() function being replaced.
+- Create `submission_event_idx` after renumbering existing submissions so upgrades with duplicate legacy `event` values can complete. Make the index changes idempotent for retry after earlier partially applied non-transactional attempts. Temporarily disable both submission event triggers while renumbering: `set_eventstamp_submissions_at_commit` calls the `get_event()` function being replaced, while `blank_submissions_event_on_update` would otherwise rewrite the assigned event values to `NULL`.
+- Keep the migration wrapper identical to upstream and use Knex's default transaction. The historical `config: { transaction: false }` workaround is no longer needed: this migration uses ordinary `CREATE INDEX`, both relevant triggers are disabled during renumbering, and an atomic transaction prevents a failed later phase from leaving a half-applied schema.

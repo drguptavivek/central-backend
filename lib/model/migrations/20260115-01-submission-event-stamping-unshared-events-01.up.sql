@@ -8,6 +8,7 @@
 -- except according to the terms contained in the LICENSE file.
 
 ALTER TABLE submissions DISABLE TRIGGER set_eventstamp_submissions_at_commit;
+ALTER TABLE submissions DISABLE TRIGGER blank_submissions_event_on_update;
 
 DROP FUNCTION IF EXISTS "public"."get_event"() CASCADE;
 
