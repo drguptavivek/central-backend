@@ -34,6 +34,22 @@ describeMigration('20260918-01-vg-expire-null-app-user-sessions', ({ runMigratio
         expires_at: new Date('2099-01-01T00:00:00Z')
       });
 
+    await rowsExistFor('sessions',
+      {
+        actorId: 700,
+        token: 'vg-null-session-token',
+        csrf: 'vg-null-session-csrf',
+        createdAt: new Date('2026-09-17T00:00:00Z'),
+        expiresAt: new Date('2099-01-01T00:00:00Z')
+      },
+      {
+        actorId: 700,
+        token: 'vg-valid-session-token',
+        csrf: 'vg-valid-session-csrf',
+        createdAt: new Date('2026-09-17T00:00:00Z'),
+        expiresAt: new Date('2099-01-01T00:00:00Z')
+      });
+
     await runMigrationBeingTested();
   });
 
@@ -53,5 +69,23 @@ describeMigration('20260918-01-vg-expire-null-app-user-sessions', ({ runMigratio
       WHERE token='vg-valid-session-token'
     `);
     assert.equal(new Date(row.expires_at).toISOString(), '2099-01-01T00:00:00.000Z');
+  });
+
+  it('expires matching core bearer sessions', async () => {
+    const row = await db.one(sql`
+      SELECT "expiresAt"
+      FROM sessions
+      WHERE token='vg-null-session-token'
+    `);
+    assert.ok(new Date(row.expiresAt).getTime() <= Date.now());
+  });
+
+  it('preserves the core session matching non-null VG metadata', async () => {
+    const row = await db.one(sql`
+      SELECT "expiresAt"
+      FROM sessions
+      WHERE token='vg-valid-session-token'
+    `);
+    assert.equal(new Date(row.expiresAt).toISOString(), '2099-01-01T00:00:00.000Z');
   });
 });
