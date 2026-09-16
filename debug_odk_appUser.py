@@ -44,13 +44,13 @@ def check_api(token):
     print(f"Project ID: {PROJECT_ID}")
     print("-" * 30)
 
-    # 1. Try Getting forms 
+    # 1. Try Getting forms
     print(f"\n2. Testing GET /v1/projects/{PROJECT_ID}/formList ...")
     try:
         r = requests.get(f"{BASE_URL}/v1/projects/{PROJECT_ID}/formList", headers=headers, verify=False)
         print(f"Status Code: {r.status_code}")
         print(f"Response Body: {r.text}")
-        
+
     except Exception as e:
         print(f"Error: {e}")
 

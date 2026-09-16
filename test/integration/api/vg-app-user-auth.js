@@ -113,14 +113,14 @@ describe('api: vg app-user auth', () => {
       .then(({ body }) => { body.code.should.equal(400.11); });
   }));
 
-  it('should reject app-user patch with missing body', testService(async (service) => {
+  it('should preserve upstream no-op behavior for app-user patch with missing body', testService(async (service) => {
     const username = 'vguser-missing-body';
     const appUser = await createAppUser(service, { username });
 
     await service.login('alice', (asAlice) =>
       asAlice.patch(`/v1/projects/1/app-users/${appUser.id}`)
-        .expect(400)
-        .then(({ body }) => { body.code.should.equal(400.3); }));
+        .expect(200)
+        .then(({ body }) => { body.id.should.equal(appUser.id); }));
   }));
 
   it('should reject app-user patch with non-string fullName or phone', testService(async (service) => {
@@ -156,6 +156,8 @@ describe('api: vg app-user auth', () => {
     await createAppUser(service, { username });
 
     for (let i = 0; i < 5; i += 1) {
+      // Login attempts must remain sequential to exercise the lockout threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: 'WrongPass!1' })
         .expect(401);
@@ -199,6 +201,8 @@ describe('api: vg app-user auth', () => {
     await createAppUser(service, { username });
 
     for (let i = 0; i < 5; i += 1) {
+      // Login attempts must remain sequential to exercise the lockout threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: 'WrongPass!1' })
         .expect(401);
@@ -237,6 +241,8 @@ describe('api: vg app-user auth', () => {
     `);
 
     for (let i = 0; i < 2; i += 1) {
+      // Login attempts must remain sequential to exercise the configured threshold.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: 'WrongPass!1' })
         .expect(401);
@@ -311,6 +317,8 @@ describe('api: vg app-user auth', () => {
 
     const logins = [];
     for (let i = 0; i < 4; i += 1) {
+      // Session creation must remain sequential to test the active-session cap.
+      // eslint-disable-next-line no-await-in-loop
       const login = await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: STRONG_PASSWORD })
         .expect(200)
@@ -341,6 +349,8 @@ describe('api: vg app-user auth', () => {
 
     const logins = [];
     for (let i = 0; i < 3; i += 1) {
+      // Session creation must remain sequential to test the active-session cap.
+      // eslint-disable-next-line no-await-in-loop
       const login = await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: STRONG_PASSWORD })
         .expect(200)
@@ -365,7 +375,7 @@ describe('api: vg app-user auth', () => {
 
   it('should honor project-level session TTL override', testService(async (service, container) => {
     const username = 'vguser-ttl-project';
-    const appUser = await createAppUser(service, { username });
+    await createAppUser(service, { username });
 
     await container.run(sql`
       INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
@@ -437,7 +447,7 @@ describe('api: vg app-user auth', () => {
     should.exist(failAudit.username);
 
     // Successful login
-    const { token, id } = await service.post('/v1/projects/1/app-users/login')
+    const { token } = await service.post('/v1/projects/1/app-users/login')
       .send({ username, password: STRONG_PASSWORD })
       .expect(200)
       .then((res) => res.body);
@@ -478,7 +488,7 @@ describe('api: vg app-user auth', () => {
 
   it('should reject a third simultaneous session when DB cap is 2', testService(async (service, container) => {
     const username = 'vguser-cap-2';
-    const appUser = await createAppUser(service, { username });
+    await createAppUser(service, { username });
 
     await container.run(sql`
       INSERT INTO vg_settings (vg_key_name, vg_key_value)
@@ -488,6 +498,8 @@ describe('api: vg app-user auth', () => {
 
     const tokens = [];
     for (let i = 0; i < 2; i += 1) {
+      // Session creation must remain sequential to test eviction order.
+      // eslint-disable-next-line no-await-in-loop
       const { token } = await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: STRONG_PASSWORD })
         .expect(200)
@@ -507,7 +519,7 @@ describe('api: vg app-user auth', () => {
     oldCount.should.equal(0);
 
     const { count: remaining } = await container.one(sql`
-      select count(*)::int as count from sessions where token in (${sql.join([tokens[1], third].map((t) => sql`${t}`), sql`,` )})
+      select count(*)::int as count from sessions where token in (${sql.join([tokens[1], third].map((t) => sql`${t}`), sql`,`)})
     `);
     remaining.should.equal(2);
 
@@ -521,6 +533,8 @@ describe('api: vg app-user auth', () => {
     await createAppUser(service, { username });
 
     for (let i = 0; i < 5; i += 1) {
+      // Login attempts must remain sequential to exercise the lockout state.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: 'WrongPass!1' })
         .expect(401);
@@ -547,6 +561,8 @@ describe('api: vg app-user auth', () => {
     await createAppUser(service, { username });
 
     for (let i = 0; i < 5; i += 1) {
+      // Login attempts must remain sequential to exercise lockout expiry.
+      // eslint-disable-next-line no-await-in-loop
       await service.post('/v1/projects/1/app-users/login')
         .send({ username, password: 'WrongPass!1' })
         .expect(401);
@@ -780,6 +796,8 @@ describe('api: vg app-user auth', () => {
     ];
 
     for (const pwd of badPasswords) {
+      // Each invalid request must complete before the next attempt.
+      // eslint-disable-next-line no-await-in-loop
       await service.login('alice', (asAlice) =>
         asAlice.post('/v1/projects/1/app-users')
           .send({ username: `vguser-${Math.random().toString(36).slice(2, 8)}`, password: pwd, fullName: 'Bad Pass' })
@@ -818,7 +836,7 @@ describe('api: vg app-user auth', () => {
       .expect(401);
   }));
 
-  it('should block login and data submission for deactivated app users', testService(async (service, container) => {
+  it('should block login and data submission for deactivated app users', testService(async (service) => {
     const username = 'vguser-deactivated';
     const appUser = await createAppUser(service, { username });
 
@@ -843,7 +861,7 @@ describe('api: vg app-user auth', () => {
   }));
 
   it('should forbid an app user from changing, resetting, or deactivating another app user', testService(async (service) => {
-    const userA = await createAppUser(service, { username: 'vguser-a' });
+    await createAppUser(service, { username: 'vguser-a' });
     const userB = await createAppUser(service, { username: 'vguser-b' });
 
     const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
@@ -868,7 +886,7 @@ describe('api: vg app-user auth', () => {
   }));
 
   it('should forbid an app user from changing an admin/user password via user routes', testService(async (service, container) => {
-    const appUser = await createAppUser(service, { username: 'vguser-noadmin' });
+    await createAppUser(service, { username: 'vguser-noadmin' });
     const { token } = await service.post('/v1/projects/1/app-users/login')
       .send({ username: 'vguser-noadmin', password: STRONG_PASSWORD })
       .expect(200)
@@ -1173,6 +1191,8 @@ describe('api: vg app-user auth', () => {
     ];
 
     for (const body of cases) {
+      // Validate each setting payload independently and in order.
+      // eslint-disable-next-line no-await-in-loop
       await asAlice.put('/v1/system/settings')
         .send(body)
         .expect(400);
@@ -1278,6 +1298,8 @@ describe('api: vg app-user auth', () => {
       ];
 
       for (const body of cases) {
+        // Validate each setting payload independently and in order.
+        // eslint-disable-next-line no-await-in-loop
         await asAlice.put('/v1/system/settings')
           .send(body)
           .expect(400);
@@ -1362,8 +1384,29 @@ describe('api: vg app-user auth', () => {
 
   // Security Tests for Settings Endpoints
   describe('Settings endpoints security', () => {
+    it('should redact project admin_pw from project readers without project.update', testService(async (service, container) => {
+      const asAlice = await service.login('alice');
+      const asChelsea = await service.login('chelsea');
+      const { body: chelsea } = await asChelsea.get('/v1/users/current').expect(200);
+      await asAlice.post(`/v1/projects/1/assignments/data_mgr/${chelsea.id}`).expect(200);
+      await ensureProjectSettingsConstraint(container);
+      await container.run(sql`
+        INSERT INTO vg_project_settings ("projectId", vg_key_name, vg_key_value)
+        VALUES (1, 'admin_pw', 'reader-must-not-see-this')
+        ON CONFLICT ("projectId", vg_key_name) DO UPDATE
+          SET vg_key_value = EXCLUDED.vg_key_value
+      `);
+
+      await asChelsea.get('/v1/projects/1/app-users/settings')
+        .expect(200)
+        .then(({ body }) => {
+          should(body.admin_pw).equal(null);
+          body.vg_app_user_ip_max_failures.should.equal(20);
+        });
+    }));
+
     it('should forbid app user from accessing system settings', testService(async (service) => {
-      const appUser = await createAppUser(service, { username: 'vguser-settings-security' });
+      await createAppUser(service, { username: 'vguser-settings-security' });
       const { token } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-settings-security', password: STRONG_PASSWORD })
         .expect(200)
@@ -1376,7 +1419,7 @@ describe('api: vg app-user auth', () => {
     }));
 
     it('should forbid app user from updating system settings', testService(async (service) => {
-      const appUser = await createAppUser(service, { username: 'vguser-settings-security-2' });
+      await createAppUser(service, { username: 'vguser-settings-security-2' });
       const { token } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-settings-security-2', password: STRONG_PASSWORD })
         .expect(200)
@@ -1391,7 +1434,7 @@ describe('api: vg app-user auth', () => {
 
     it('should forbid user without project.read from accessing project settings', testService(async (service) => {
       // Create a user that exists but has no specific permissions on the project
-      const appUser = await createAppUser(service, { username: 'vguser-no-perm' });
+      await createAppUser(service, { username: 'vguser-no-perm' });
       const { token } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-no-perm', password: STRONG_PASSWORD })
         .expect(200)
@@ -1404,7 +1447,7 @@ describe('api: vg app-user auth', () => {
     }));
 
     it('should forbid user without project.update from updating project settings', testService(async (service) => {
-      const appUser = await createAppUser(service, { username: 'vguser-no-perm-2' });
+      await createAppUser(service, { username: 'vguser-no-perm-2' });
       const { token } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-no-perm-2', password: STRONG_PASSWORD })
         .expect(200)
@@ -1419,7 +1462,7 @@ describe('api: vg app-user auth', () => {
 
     it('should forbid app user from Project A accessing Project B settings', testService(async (service) => {
       // Create app user in Project 1
-      const appUserA = await createAppUser(service, { username: 'vguser-project-a' });
+      await createAppUser(service, { username: 'vguser-project-a' });
       const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-project-a', password: STRONG_PASSWORD })
         .expect(200)
@@ -1440,7 +1483,7 @@ describe('api: vg app-user auth', () => {
 
     it('should forbid app user from Project A updating Project B settings', testService(async (service) => {
       // Create app user in Project 1
-      const appUserA = await createAppUser(service, { username: 'vguser-project-a-2' });
+      await createAppUser(service, { username: 'vguser-project-a-2' });
       const { token: tokenA } = await service.post('/v1/projects/1/app-users/login')
         .send({ username: 'vguser-project-a-2', password: STRONG_PASSWORD })
         .expect(200)

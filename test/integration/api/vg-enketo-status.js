@@ -1,5 +1,4 @@
 const should = require('should');
-const { sql } = require('slonik');
 require('../assertions');
 const { testService } = require('../setup');
 

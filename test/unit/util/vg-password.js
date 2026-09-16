@@ -1,4 +1,4 @@
-const should = require('should');
+require('should');
 const { validateVgPassword } = require('../../../lib/util/vg-password');
 
 describe('util: vg-password', () => {

@@ -227,7 +227,7 @@ describe('vg org app-users (short token flow)', () => {
       .expect(403);
   }));
 
-  it('rejects submissions after password change using old token', testService(async (service, container) => {
+  it('rejects submissions after password change using old token', testService(async (service) => {
     const asAlice = await service.login('alice');
     const appUser = await createAppUser(service, asAlice);
     const token = await loginAppUser(service, appUser);
@@ -263,9 +263,17 @@ describe('vg org app-users (short token flow)', () => {
   it('deletes app users assignments on delete and scopes deletion to project', testService(async (service) => {
     const asAlice = await service.login('alice');
     const fk = await createAppUser(service, asAlice);
+    const token = await loginAppUser(service, fk);
     await asAlice.post(`/v1/projects/1/forms/simple/assignments/app-user/${fk.id}`).expect(200);
     await asAlice.delete(`/v1/projects/1/app-users/${fk.id}`).expect(200);
     await asAlice.get('/v1/projects/1/forms/simple/assignments').expect(200).then(({ body }) => body.should.eql([]));
+    await service.post('/v1/projects/1/app-users/login')
+      .send({ username: fk.username, password: fk.password })
+      .expect(401);
+    await service.post(`/v1/key/${token}/projects/1/forms/simple/submissions`)
+      .send(testData.instances.simple.one)
+      .set('Content-Type', 'application/xml')
+      .expect(403);
     const { id: project2 } = await asAlice.post('/v1/projects').send({ name: 'proj-2' }).expect(200).then(({ body }) => body);
     const fk2 = await createAppUser(service, asAlice, project2);
     await asAlice.delete(`/v1/projects/1/app-users/${fk2.id}`).expect(404);

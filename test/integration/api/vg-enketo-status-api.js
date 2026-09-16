@@ -44,11 +44,11 @@ describe('api: vg enketo status endpoints', () => {
     result.body.meta.should.have.property('closed');
   }));
 
-  it('should require config.read permission to view enketo status', testService((service) => {
+  it('should require config.read permission to view enketo status', testService((service) =>
     // Try without auth - should fail
-    return service.get('/v1/system/enketo-status')
-      .expect(401);
-  }));
+    service.get('/v1/system/enketo-status')
+      .expect(401)
+  ));
 
   it('should regenerate enketoId for specified forms', testService(async (service, container) => {
     const asAlice = await service.login('alice');
@@ -93,12 +93,12 @@ describe('api: vg enketo status endpoints', () => {
     result.body.results.should.be.an.Array();
   }));
 
-  it('should require config.set permission to regenerate enketoIds', testService((service) => {
+  it('should require config.set permission to regenerate enketoIds', testService((service) =>
     // Try without auth - should fail
-    return service.post('/v1/system/enketo-status/regenerate')
+    service.post('/v1/system/enketo-status/regenerate')
       .send({ forms: [{ formId: 1, projectId: 1 }] })
-      .expect(401);
-  }));
+      .expect(401)
+  ));
 
   it('should filter by projectId query parameter', testService(async (service) => {
     const asAlice = await service.login('alice');

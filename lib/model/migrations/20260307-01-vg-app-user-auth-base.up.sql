@@ -250,7 +250,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_vg_app_user_telemetry_actor_device_time_no
 -- Ensure admin/manager roles can update app users.
 UPDATE roles
 SET verbs = coalesce(verbs, '[]'::jsonb) || '["field_key.update"]'::jsonb
-WHERE system IN ('admin', 'manager');
+WHERE system IN ('admin', 'manager')
+  AND NOT coalesce(verbs, '[]'::jsonb) @> '["field_key.update"]'::jsonb;
 
 -- Add project.read to app-user role.
 UPDATE roles

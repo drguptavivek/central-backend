@@ -36,3 +36,4 @@ LANGUAGE sql
 COMMENT ON FUNCTION "public"."get_event"() IS '{"dbsamizdat": {"version": 1, "definition_hash": "9538082b3636013895e4dcc8de1165bb"}}';
 
 ALTER TABLE submissions ENABLE TRIGGER set_eventstamp_submissions_at_commit;
+ALTER TABLE submissions ENABLE TRIGGER blank_submissions_event_on_update;

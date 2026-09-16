@@ -1,0 +1,45 @@
+[
+  {
+    "fullTitle": "api: /sessions /:token DELETE should log the action in the audit log if it is a field key",
+    "failureMessage": "expected 200 \"OK\", got 400 \"Bad Request\"",
+    "reason": "The upstream fixture expects app-user creation to return a legacy long-lived field-key session token. VG creation deliberately returns no token; callers must authenticate with the short-lived username/password bearer flow."
+  },
+  {
+    "fullTitle": "api: /sessions /:token DELETE should allow managers to delete project app user sessions",
+    "failureMessage": "expected 200 \"OK\", got 400 \"Bad Request\"",
+    "reason": "The upstream fixture reads body.token from app-user creation. VG creation deliberately does not expose a long-lived field-key session token."
+  },
+  {
+    "fullTitle": "api: /sessions /:token DELETE should not allow app users to delete their own sessions",
+    "failureMessage": "expected 200 \"OK\", got 400 \"Bad Request\"",
+    "reason": "The upstream fixture reads body.token from app-user creation. VG app-user sessions are issued only as short-lived login bearers and are not returned by create."
+  },
+  {
+    "fullTitle": "api: /sessions /:token DELETE should log the action in the audit log for app users",
+    "failureMessage": "expected 200 \"OK\", got 400 \"Bad Request\"",
+    "reason": "The upstream fixture expects a long-lived app-user field-key token from create so it can end that session. VG create returns no token under the secure contract."
+  },
+  {
+    "fullTitle": "api: /sessions /current DELETE should not allow app users to delete their own sessions",
+    "failureMessage": "expected 200 \"OK\", got 400 \"Bad Request\"",
+    "reason": "The upstream fixture reads appUser.token from create. VG app-user creation never exposes a long-lived session token; login returns only a short-lived bearer."
+  },
+  {
+    "fullTitle": "api: /projects/:id/app-users POST should create a long session",
+    "failureMessage": "to be '9999-12-31T23:59:59.000Z'",
+    "adaptLegacyFixture": true,
+    "reason": "VG app-user login deliberately issues a short-lived bearer session rather than the upstream effectively permanent field-key session."
+  },
+  {
+    "fullTitle": "api: /projects/:id/app-users POST should log the action in the audit log",
+    "failureMessage": "expected 0 to be 1",
+    "adaptLegacyFixture": true,
+    "reason": "VG secure app-user creation uses the namespaced vg.app_user.create audit action rather than the upstream field_key.create action."
+  },
+  {
+    "fullTitle": "api: /projects/:id/app-users /:id DELETE should log the action in the audit log",
+    "failureMessage": "to equal Array [ 'field_key.delete', 'field_key.create' ]",
+    "adaptLegacyFixture": true,
+    "reason": "VG secure app-user creation uses the namespaced vg.app_user.create audit action, so the upstream field_key.create audit is intentionally absent."
+  }
+]

@@ -23,7 +23,11 @@ Records app-user telemetry (device metadata, timestamps, optional location).
 }
 ```
 
-`status` becomes `"invalidated"` if the current bearer token no longer resolves as a valid session by the time the telemetry record is processed.
+The bearer must identify an active, undeleted App User with a non-null VG
+session expiry later than the authentication statement. Expired, revoked,
+null-expiry, inactive, or deleted credentials return 401 and record no
+telemetry. `status` can become `"invalidated"` only if the core session is
+invalidated concurrently after that strict check.
 
 ## Settings
 

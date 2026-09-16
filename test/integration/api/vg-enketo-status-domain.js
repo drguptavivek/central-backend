@@ -1,4 +1,4 @@
-const should = require('should');
+require('should');
 require('../assertions');
 const { testService } = require('../setup');
 

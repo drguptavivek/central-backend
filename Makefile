@@ -116,7 +116,13 @@ test-fast: node_version
 
 .PHONY: test-integration
 test-integration: node_version
-	NODE_CONFIG_ENV=$(NODE_CONFIG_ENV) BCRYPT=insecure npx mocha --recursive test/integration
+	NODE_CONFIG_ENV=$(NODE_CONFIG_ENV) BCRYPT=insecure npx mocha --recursive \
+	    --require test/vg/mocha-expected-failures.js test/integration
+
+.PHONY: test-integration-vg-sessions
+test-integration-vg-sessions: node_version
+	NODE_CONFIG_ENV=$(NODE_CONFIG_ENV) BCRYPT=insecure npx mocha --timeout=10000 \
+	    --require test/vg/mocha-expected-failures.js test/integration/api/sessions.js
 
 .PHONY: test-unit
 test-unit: node_version
