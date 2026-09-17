@@ -1,5 +1,6 @@
 const should = require('should');
 const { sql } = require('slonik');
+const { password4alice } = require('../../util/passwords');
 require('../assertions');
 const { testService } = require('../setup');
 
@@ -109,13 +110,13 @@ describe('api: vg web user IP rate limiting', () => {
       // user1@test.com should be locked (per-user)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'user1@test.com', password: 'password4alice' })
+        .send({ email: 'user1@test.com', password: password4alice })
         .expect(401);
 
       // But user2@test.com should work (only 5 attempts total from IP, below IP threshold)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(200);
     }));
 
@@ -136,7 +137,7 @@ describe('api: vg web user IP rate limiting', () => {
       // (3 attempts << 20 IP threshold, and << 5 per-user threshold)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(200);
     }));
 
@@ -303,7 +304,7 @@ describe('api: vg web user IP rate limiting', () => {
       // Verify IP locked (21st attempt triggered lockout, next attempt should be locked)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(429);
 
       // Age out the IP lockout beyond 30 minutes
@@ -317,7 +318,7 @@ describe('api: vg web user IP rate limiting', () => {
       // Should work now (IP lockout expired)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(200);
     }));
 
@@ -337,7 +338,7 @@ describe('api: vg web user IP rate limiting', () => {
 
       // Should be per-user locked (401), not IP locked (429)
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
     }));
 
@@ -361,13 +362,13 @@ describe('api: vg web user IP rate limiting', () => {
       // IP1 should still be locked for subsequent attempts
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', '8.8.8.8')
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(429);
 
       // IP2: 0 failed attempts → should work
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', '9.9.9.9')
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(200);
     }));
 
@@ -455,7 +456,7 @@ describe('api: vg web user IP rate limiting', () => {
       // Now verify IP is locked (should return 429)
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', ip)
-        .send({ email: 'alice@getodk.org', password: 'password4alice' })
+        .send({ email: 'alice@getodk.org', password: password4alice })
         .expect(429);
     }));
   });

@@ -1,0 +1,17 @@
+# CI/local-development single-node Garage configuration.
+# Keep this file deliberately separate from the production Garage deployment
+# configuration in the historical VG branch. The test/development harness
+# exposes only the S3 API on localhost and uses an ephemeral data directory.
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+rpc_bind_addr = "[::]:3901"
+rpc_secret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+[s3_api]
+# Minio's provider-neutral client defaults to us-east-1 unless a region is
+# supplied, so use that interoperable S3 region for this test emulator.
+s3_region = "us-east-1"
+api_bind_addr = "[::]:3900"

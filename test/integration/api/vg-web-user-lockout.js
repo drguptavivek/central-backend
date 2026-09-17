@@ -1,5 +1,6 @@
 const should = require('should');
 const { sql } = require('slonik');
+const { password4alice } = require('../../util/passwords');
 require('../assertions');
 const { testService } = require('../setup');
 
@@ -21,7 +22,7 @@ describe('api: vg web user lockout', () => {
 
       // 6th attempt should be locked out
       const response = await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Should indicate lockout - either through loginAttemptsRemaining or being locked out
@@ -47,7 +48,7 @@ describe('api: vg web user lockout', () => {
 
       // First email should be locked out
       await service.post('/v1/sessions')
-        .send({ email: email1, password: 'password4alice' })
+        .send({ email: email1, password: password4alice })
         .expect(401);
 
       // Second email should still work (different email, so separate counter)
@@ -91,7 +92,7 @@ describe('api: vg web user lockout', () => {
       // Should be locked out from IP 1.1.1.1
       await service.post('/v1/sessions')
         .set('X-Forwarded-For', '1.1.1.1')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Should work from IP 2.2.2.2 (only 1 attempt so far)
@@ -156,7 +157,7 @@ describe('api: vg web user lockout', () => {
 
       // Successful login
       await service.post('/v1/sessions')
-        .send({ email: aliceEmail, password: 'password4alice' })
+        .send({ email: aliceEmail, password: password4alice })
         .expect(200);
 
       // After successful login, counter should be reset
@@ -171,7 +172,7 @@ describe('api: vg web user lockout', () => {
 
       // 6th attempt should be locked out
       await service.post('/v1/sessions')
-        .send({ email: aliceEmail, password: 'password4alice' })
+        .send({ email: aliceEmail, password: password4alice })
         .expect(401);
     }));
 
@@ -189,7 +190,7 @@ describe('api: vg web user lockout', () => {
 
       // Should be locked out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Note: Testing the exact time window behavior would require manipulating
@@ -212,7 +213,7 @@ describe('api: vg web user lockout', () => {
 
       // Verify locked out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Age out the failures beyond the 5-minute window
@@ -225,7 +226,7 @@ describe('api: vg web user lockout', () => {
 
       // Lockout should still be active even though failures aged out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
     }));
 
@@ -243,7 +244,7 @@ describe('api: vg web user lockout', () => {
 
       // Verify locked out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Find the lockout audit entry and age it beyond the duration
@@ -278,7 +279,7 @@ describe('api: vg web user lockout', () => {
 
       // Should work now
       await service.post('/v1/sessions')
-        .send({ email: aliceEmail, password: 'password4alice' })
+        .send({ email: aliceEmail, password: password4alice })
         .expect(200);
     }));
 
@@ -306,7 +307,7 @@ describe('api: vg web user lockout', () => {
 
       // Should be locked out (total of 5 attempts for same email)
       await service.post('/v1/sessions')
-        .send({ email: email1, password: 'password4alice' })
+        .send({ email: email1, password: password4alice })
         .expect(401);
     }));
 
@@ -380,7 +381,7 @@ describe('api: vg web user lockout', () => {
 
       // Should be locked out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
     }));
 
@@ -398,12 +399,12 @@ describe('api: vg web user lockout', () => {
 
       // Should be locked out
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
 
       // Same email with different whitespace should also be locked out
       await service.post('/v1/sessions')
-        .send({ email: 'whitespace-test@getodk.org', password: 'password4alice' })
+        .send({ email: 'whitespace-test@getodk.org', password: password4alice })
         .expect(401);
     }));
 
@@ -460,7 +461,7 @@ describe('api: vg web user lockout', () => {
       }
 
       await service.post('/v1/sessions')
-        .send({ email, password: 'password4alice' })
+        .send({ email, password: password4alice })
         .expect(401);
     }));
   });

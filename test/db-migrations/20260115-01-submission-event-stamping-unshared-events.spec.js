@@ -6,6 +6,10 @@ describeMigration('20260115-01-submission-event-stamping-unshared-events', ({ ru
     await rowsExistFor('actees',
       { id: 'vg-migration-project', species: 'project' },
       { id: 'vg-migration-form', species: 'form' });
+    // Other migration specs may have already advanced the shared migration
+    // harness past this historical migration. Recreate its pre-migration
+    // schema explicitly before inserting duplicate legacy events.
+    await db.query(sql`DROP INDEX IF EXISTS submission_event_idx`);
     await rowsExistFor('projects',
       { id: 1, name: 'VG migration test', acteeId: 'vg-migration-project' });
     await rowsExistFor('forms',

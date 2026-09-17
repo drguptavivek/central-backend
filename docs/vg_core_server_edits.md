@@ -31,11 +31,29 @@ This file tracks VG changes made directly to upstream core files.
 - When revoking sessions without a projectId, skip audit acteeId and synthesize a field_key actor for session termination.
 - Reject self revoke when the current auth session is missing.
 - Skip duplicate audits when a session is already revoked or an app user is already inactive.
+- Keep the VG composition password policy while mapping failures to upstream
+  `passwordTooWeak` (400.44), so app-user password validation uses the shared
+  upstream problem contract.
+
+## lib/resources/projects.js
+- Preserve the VG app-user project projection and apply the upstream
+  `?verbs=true` query behavior to both normal and app-user project responses.
 
 ## lib/model/query/vg-app-user-auth.js
 - Use a LEFT JOIN to field_keys for session lookups to allow revoke after field key deletion.
 - When ip is missing, scope lockout status/clears to rows with null ip instead of all IPs.
 - Include actor acteeId on session lookup to support audit logging for session revokes.
+- Require an expiry when recording app-user sessions; the upgrade migration
+  expires legacy rows whose expiry was NULL.
+
+## lib/http/endpoint.js
+- Keep failed web and app-user login attempts outside the request transaction
+  so lockouts and security audits survive rejected responses. The app-user
+  exception matches only `/projects/:projectId/app-users/login`.
+
+## lib/model/migrations/20260918-01-vg-expire-null-app-user-sessions.js (NEW)
+- Mark existing `vg_app_user_sessions` rows with `expires_at IS NULL` as
+  expired while retaining the rows for audit and retention history.
 
 ## lib/model/container.js
 - Register VgAppUserIpRateLimit query module in defaultQueries for IP-based rate limiting.
@@ -69,3 +87,18 @@ This file tracks VG changes made directly to upstream core files.
 ## lib/model/migrations/20260115-01-submission-event-stamping-unshared-events-01.up.sql
 - Create `submission_event_idx` after renumbering existing submissions so upgrades with duplicate legacy `event` values can complete. Make the index changes idempotent for retry after earlier partially applied non-transactional attempts. Temporarily disable both submission event triggers while renumbering: `set_eventstamp_submissions_at_commit` calls the `get_event()` function being replaced, while `blank_submissions_event_on_update` would otherwise rewrite the assigned event values to `NULL`.
 - Keep the migration wrapper identical to upstream and use Knex's default transaction. The historical `config: { transaction: false }` workaround is no longer needed: this migration uses ordinary `CREATE INDEX`, both relevant triggers are disabled during renumbering, and an atomic transaction prevents a failed later phase from leaving a half-applied schema.
+
+## CI S3 emulator
+- Replace the abandoned `minio/minio` Docker test server with the pinned
+  `dxflrs/garage:v2.4.1` image (digest-pinned) in `test/e2e/s3/`. The setup is
+  intentionally limited to CI and local development: one ephemeral Garage
+  node, one localhost S3 API port, deterministic test credentials and bucket,
+  and no production Compose or nginx integration. The shared `dev-s3` and S3
+  E2E targets use this emulator. The Minio Node package remains the
+  S3-compatible client under test. Garage outage tests target the exact named
+  container and CI always publishes container diagnostics.
+## `.github/workflows/oidc-integration.yml`
+
+- Allows ten minutes for each PostgreSQL matrix job. Both OIDC test commands
+  completed within the former six-minute limit, but the PostgreSQL 14 job was
+  cancelled while the always-run diagnostic logs were still being collected.
