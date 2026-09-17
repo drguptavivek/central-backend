@@ -87,3 +87,12 @@ This file tracks VG changes made directly to upstream core files.
 ## lib/model/migrations/20260115-01-submission-event-stamping-unshared-events-01.up.sql
 - Create `submission_event_idx` after renumbering existing submissions so upgrades with duplicate legacy `event` values can complete. Make the index changes idempotent for retry after earlier partially applied non-transactional attempts. Temporarily disable both submission event triggers while renumbering: `set_eventstamp_submissions_at_commit` calls the `get_event()` function being replaced, while `blank_submissions_event_on_update` would otherwise rewrite the assigned event values to `NULL`.
 - Keep the migration wrapper identical to upstream and use Knex's default transaction. The historical `config: { transaction: false }` workaround is no longer needed: this migration uses ordinary `CREATE INDEX`, both relevant triggers are disabled during renumbering, and an atomic transaction prevents a failed later phase from leaving a half-applied schema.
+
+## CI S3 emulator
+- Replace the abandoned `minio/minio` Docker test server with the pinned
+  `dxflrs/garage:v2.4.1` image (digest-pinned) in `test/e2e/s3/`. The setup is
+  intentionally CI-only: one ephemeral Garage node, one localhost S3 API
+  port, deterministic credentials and bucket, and no production Compose or
+  nginx integration. The Minio Node package remains the S3-compatible client
+  under test. Garage outage tests target the exact named container and CI
+  always publishes container diagnostics.

@@ -26,7 +26,6 @@ jobs:
     - run: make run-docker-postgres
       env:
         PG_VERSION: ${{ matrix.postgres-version }}
-    - run: sudo apt-get install wait-for-it
     - name: E2E Test
       timeout-minutes: 10
       run: ./test/e2e/s3/run-tests.sh
@@ -36,3 +35,8 @@ jobs:
     - name: PostgreSQL logs
       if: always()
       run: docker logs odk-central-backend-dev-postgres || true
+    - name: Garage diagnostics
+      if: always()
+      run: |
+        cat "$RUNNER_TEMP/odk-central-s3-garage.inspect" || true
+        cat "$RUNNER_TEMP/odk-central-s3-garage.log" || true

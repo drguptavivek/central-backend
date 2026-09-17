@@ -29,17 +29,15 @@ const userPassword = 'STR0NG-secret-1234?';
 describe('s3 support', () => {
   // eslint-disable-next-line one-var, one-var-declaration-per-line
   let api, expectedAttachments, actualAttachments, projectId, xmlFormId, attDir;
-  let _initial, _minioTerminated; // eslint-disable-line one-var, one-var-declaration-per-line
+  let _initial, _garageTerminated; // eslint-disable-line one-var, one-var-declaration-per-line
 
-  const minioTerminated = () => {
-    if(_minioTerminated) return;
+  const garageTerminated = () => {
+    if(_garageTerminated) return;
 
-    // It should be possible to use docker more precisely here, e.g.
-    //   docker stop $(docker ps --quiet --filter "ancestor=minio/minio")
-    // However, the ancestor filter requries specifying the exact tag used.
-    // See: https://docs.docker.com/reference/cli/docker/container/ls/#ancestor
-    execSync(`docker ps | awk '/minio/ { print $1 }' | xargs docker kill`);
-    _minioTerminated = true;
+    // Kill the exact named CI container so unrelated Docker services cannot be
+    // interrupted by this outage test.
+    execSync('docker kill odk-central-s3-garage');
+    _garageTerminated = true;
   };
 
   before(async () => {
@@ -52,7 +50,7 @@ describe('s3 support', () => {
   });
 
   afterEach(async function() {
-    if(_minioTerminated) return;
+    if(_garageTerminated) return;
 
     this.timeout(TIMEOUT);
     await cli('reset-failed-to-pending');
@@ -88,8 +86,8 @@ describe('s3 support', () => {
     await assertNoneRedirect(actualAttachments);
   }
 
-  describe('with running minio', () => {
-    beforeEach(() => should(_minioTerminated).be.undefined());
+  describe('with running Garage', () => {
+    beforeEach(() => should(_garageTerminated).be.undefined());
 
     it('should shift submission attachments to s3', async function() {
       this.timeout(TIMEOUT);
@@ -295,8 +293,8 @@ describe('s3 support', () => {
     });
   });
 
-  describe('with terminated minio', () => {
-    // N.B. THIS TEST KILLS THE MINIO SERVER, SO IT WILL NOT BE AVAILABLE TO SUBSEQUENT TESTS
+  describe('with terminated Garage', () => {
+    // N.B. THIS TEST KILLS THE Garage server, SO IT WILL NOT BE AVAILABLE TO SUBSEQUENT TESTS
     it('should handle s3 connection failing', async function() {
       this.timeout(TIMEOUT);
 
@@ -320,7 +318,7 @@ describe('s3 support', () => {
       }
       await untilUploadInProgress();
       // and
-      minioTerminated();
+      garageTerminated();
 
       // then
       // N.B. These errors are as observed, and demonstrate that the root error is shared
@@ -334,7 +332,7 @@ describe('s3 support', () => {
       this.timeout(TIMEOUT);
 
       // given
-      minioTerminated();
+      garageTerminated();
       // and
       await setup(7, { bigFiles: 0 });
       await assertNewStatuses({ pending: 2 });
