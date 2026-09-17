@@ -1,7 +1,7 @@
-# CI-only single-node Garage configuration.
+# CI/local-development single-node Garage configuration.
 # Keep this file deliberately separate from the production Garage deployment
-# configuration in the historical VG branch.  The E2E harness exposes only the
-# S3 API on localhost and uses an ephemeral data directory.
+# configuration in the historical VG branch. The test/development harness
+# exposes only the S3 API on localhost and uses an ephemeral data directory.
 
 metadata_dir = "/var/lib/garage/meta"
 data_dir = "/var/lib/garage/data"

@@ -91,8 +91,9 @@ This file tracks VG changes made directly to upstream core files.
 ## CI S3 emulator
 - Replace the abandoned `minio/minio` Docker test server with the pinned
   `dxflrs/garage:v2.4.1` image (digest-pinned) in `test/e2e/s3/`. The setup is
-  intentionally CI-only: one ephemeral Garage node, one localhost S3 API
-  port, deterministic credentials and bucket, and no production Compose or
-  nginx integration. The Minio Node package remains the S3-compatible client
-  under test. Garage outage tests target the exact named container and CI
-  always publishes container diagnostics.
+  intentionally limited to CI and local development: one ephemeral Garage
+  node, one localhost S3 API port, deterministic test credentials and bucket,
+  and no production Compose or nginx integration. The shared `dev-s3` and S3
+  E2E targets use this emulator. The Minio Node package remains the
+  S3-compatible client under test. Garage outage tests target the exact named
+  container and CI always publishes container diagnostics.
