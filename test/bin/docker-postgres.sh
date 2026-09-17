@@ -80,8 +80,21 @@ docker run \
         ${enableSsl:+--ssl_cert_file=/postgres-certs/server.crt} \
         ${enableSsl:+--ssl_key_file=/postgres-certs/server.key}
 
-sleep 2
-docker exec "$imageName" pg_isready --username=postgres --timeout=10
+log "Waiting for PostgreSQL readiness..."
+ready=false
+deadline=$((SECONDS + 60))
+while (( SECONDS < deadline )); do
+  if docker exec "$imageName" pg_isready --username=postgres --timeout=1; then
+    ready=true
+    break
+  fi
+  sleep 1
+done
+if [[ "$ready" != true ]]; then
+  log "PostgreSQL did not become ready within 60 seconds."
+  docker logs "$imageName" >&2
+  exit 1
+fi
 
 node lib/bin/create-docker-databases.js ${CI:+--log}
 
