@@ -97,3 +97,8 @@ This file tracks VG changes made directly to upstream core files.
   E2E targets use this emulator. The Minio Node package remains the
   S3-compatible client under test. Garage outage tests target the exact named
   container and CI always publishes container diagnostics.
+## `.github/workflows/oidc-integration.yml`
+
+- Allows ten minutes for each PostgreSQL matrix job. Both OIDC test commands
+  completed within the former six-minute limit, but the PostgreSQL 14 job was
+  cancelled while the always-run diagnostic logs were still being collected.
